@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌮 בנה טאקו</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 p-4">
+
+    <div class="max-w-md mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-6">🌮 בנה את הטאקו שלך</h1>
+
+        <!-- טורטיה -->
+        <div class="bg-white rounded-2xl p-4 mb-4 shadow">
+            <div class="font-bold mb-3">1. בחר טורטיה</div>
+            <div class="grid grid-cols-2 gap-3" id="tortilla"></div>
+        </div>
+
+        <!-- חלבון -->
+        <div class="bg-white rounded-2xl p-4 mb-4 shadow">
+            <div class="font-bold mb-3">2. בחר חלבון</div>
+            <div class="grid grid-cols-2 gap-3" id="protein"></div>
+        </div>
+
+        <!-- תוספות -->
+        <div class="bg-white rounded-2xl p-4 mb-4 shadow">
+            <div class="font-bold mb-3">3. תוספות</div>
+            <div class="flex flex-wrap gap-2" id="toppings"></div>
+        </div>
+
+        <!-- רטבים -->
+        <div class="bg-white rounded-2xl p-4 mb-5 shadow">
+            <div class="font-bold mb-3">4. רטבים</div>
+            <div class="flex flex-wrap gap-2" id="sauces"></div>
+        </div>
+
+        <!-- תצוגה -->
+        <div class="bg-white rounded-2xl shadow p-4 mb-6">
+            <div class="font-bold mb-2">הטאקו שלך</div>
+            <div id="preview" class="min-h-[80px]"></div>
+            <div class="text-right text-2xl font-black mt-2" id="count">0</div>
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="surprise()" class="flex-1 py-3 bg-purple-600 text-white rounded-2xl font-bold">הפתעה אותי</button>
+            <button onclick="makeTaco()" class="flex-1 py-3 bg-orange-500 text-white rounded-2xl font-bold">הכן טאקו!</button>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            tortillas: [{id:'corn',name:'תירס',emoji:'🌽'},{id:'flour',name:'קמח',emoji:'🫓'}],
+            proteins: [{id:'beef',name:'בקר',emoji:'🥩'},{id:'chicken',name:'עוף',emoji:'🍗'},{id:'tofu',name:'טופו',emoji:'🥦'}],
+            toppings: [{id:'lettuce',name:'חסה',emoji:'🥬'},{id:'tomato',name:'עגבניה',emoji:'🍅'},{id:'avocado',name:'אבוקדו',emoji:'🥑'},{id:'cheese',name:'גבינה',emoji:'🧀'}],
+            sauces: [{id:'salsa',name:'סלסה',emoji:'🥫'},{id:'guac',name:'גוואקמולי',emoji:'🥑'},{id:'hot',name:'חריף',emoji:'🔥'}]
+        };
+        let state = {tortilla:null, protein:null, toppings:new Set(), sauces:new Set()};
+
+        function render() {
+            // טורטיה
+            let html = '';
+            data.tortillas.forEach(item => {
+                html += `<div onclick="selectTortilla('\( {item.id}', this)" class="border-2 border-amber-200 rounded-2xl p-4 text-center cursor-pointer"><div class="text-5xl"> \){item.emoji}</div><div class="font-bold">${item.name}</div></div>`;
+            });
+            document.getElementById('tortilla').innerHTML = html;
+
+            // חלבון
+            html = '';
+            data.proteins.forEach(item => {
+                html += `<div onclick="selectProtein('\( {item.id}', this)" class="border-2 border-orange-200 rounded-2xl p-4 text-center cursor-pointer"><div class="text-5xl"> \){item.emoji}</div><div class="font-bold">${item.name}</div></div>`;
+            });
+            document.getElementById('protein').innerHTML = html;
+
+            // תוספות
+            html = '';
+            data.toppings.forEach(item => {
+                html += `<div onclick="toggleTopping('\( {item.id}', this)" class="px-4 py-2 border border-green-300 bg-green-50 rounded-2xl flex items-center gap-2 cursor-pointer"><span class="text-2xl"> \){item.emoji}</span> <span>${item.name}</span></div>`;
+            });
+            document.getElementById('toppings').innerHTML = html;
+
+            // רטבים
+            html = '';
+            data.sauces.forEach(item => {
+                html += `<div onclick="toggleSauce('\( {item.id}', this)" class="px-4 py-2 border border-red-300 bg-red-50 rounded-2xl flex items-center gap-2 cursor-pointer"><span class="text-2xl"> \){item.emoji}</span> <span>${item.name}</span></div>`;
+            });
+            document.getElementById('sauces').innerHTML = html;
+        }
+
+        function selectTortilla(id, el) {
+            document.querySelectorAll('#tortilla > div').forEach(e => e.classList.remove('border-amber-500'));
+            el.classList.add('border-amber-500');
+            state.tortilla = id;
+            updatePreview();
+        }
+
+        function selectProtein(id, el) {
+            document.querySelectorAll('#protein > div').forEach(e => e.classList.remove('border-orange-500'));
+            el.classList.add('border-orange-500');
+            state.protein = id;
+            updatePreview();
+        }
+
+        function toggleTopping(id, el) {
+            if (state.toppings.has(id)) {
+                state.toppings.delete(id);
+                el.classList.remove('border-green-500', 'bg-green-100');
+            } else {
+                state.toppings.add(id);
+                el.classList.add('border-green-500', 'bg-green-100');
+            }
+            updatePreview();
+        }
+
+        function toggleSauce(id, el) {
+            if (state.sauces.has(id)) {
+                state.sauces.delete(id);
+                el.classList.remove('border-red-500', 'bg-red-100');
+            } else {
+                state.sauces.add(id);
+                el.classList.add('border-red-500', 'bg-red-100');
+            }
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const prev = document.getElementById('preview');
+            const countEl = document.getElementById('count');
+            let html = '';
+            let total = 0;
+
+            const tor = data.tortillas.find(x => x.id === state.tortilla);
+            const pro = data.proteins.find(x => x.id === state.protein);
+            const tops = data.toppings.filter(x => state.toppings.has(x.id));
+            const sauc = data.sauces.filter(x => state.sauces.has(x.id));
+
+            if (tor) { html += `<div class="flex items-center gap-2 mb-1"><span class="text-3xl">\( {tor.emoji}</span> <span class="font-bold"> \){tor.name}</span></div>`; total++; }
+            if (pro) { html += `<div class="flex items-center gap-2 mb-1"><span class="text-3xl">\( {pro.emoji}</span> <span class="font-bold"> \){pro.name}</span></div>`; total++; }
+            if (tops.length) { html += `<div class="text-sm mt-2">תוספות: ${tops.map(t => t.emoji).join(' ')}</div>`; total += tops.length; }
+            if (sauc.length) { html += `<div class="text-sm">רטבים: ${sauc.map(s => s.emoji).join(' ')}</div>`; total += sauc.length; }
+
+            prev.innerHTML = html || 'בחר מרכיבים...';
+            countEl.textContent = total;
+        }
+
+        function surprise() {
+            state.tortilla = data.tortillas[0].id;
+            state.protein = data.proteins[0].id;
+            state.toppings = new Set(['lettuce', 'tomato']);
+            state.sauces = new Set(['salsa']);
+            render();
+            updatePreview();
+        }
+
+        function makeTaco() {
+            if (!state.tortilla || !state.protein) {
+                alert('בחר טורטיה וחלבון');
+                return;
+            }
+            alert('🌮 הטאקו מוכן! תהנה!');
+        }
+
+        function init() {
+            render();
+            document.getElementById('preview').innerHTML = 'בחר מרכיבים...';
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
