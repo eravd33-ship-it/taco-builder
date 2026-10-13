@@ -24,6 +24,9 @@ class Database:
         self.conn.execute("CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         self.conn.commit()
 
+    def close(self) -> None:
+        self.conn.close()
+
     def execute(self, sql: str, params: Sequence[Any] = ()) -> sqlite3.Cursor:
         cursor = self.conn.execute(sql, params)
         self.conn.commit()

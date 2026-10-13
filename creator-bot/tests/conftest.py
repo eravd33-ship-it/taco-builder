@@ -99,3 +99,55 @@ def make_core(clock: Clock):
         return core
 
     return factory
+
+
+class FakeAutostart:
+    def __init__(self) -> None:
+        self.enabled = False
+
+    def is_enabled(self) -> bool:
+        return self.enabled
+
+    def enable(self) -> None:
+        self.enabled = True
+
+    def disable(self) -> None:
+        self.enabled = False
+
+
+class Desk:
+    """A DesktopApp wired to fakes, with shortcuts for calling its API."""
+
+    def __init__(self, app, shown, opened) -> None:
+        self.app, self.shown, self.opened = app, shown, opened
+
+    async def call(self, method: str, path: str, body: dict | None = None, query: dict | None = None):
+        return await self.app.handle(method, path, query or {}, body or {})
+
+    async def ok(self, method: str, path: str, body: dict | None = None, query: dict | None = None):
+        status, data = await self.call(method, path, body, query)
+        assert status < 300, (status, data)
+        return data
+
+    async def settle(self):
+        await self.app.idle()
+
+
+@pytest.fixture
+def make_desk(clock):
+    def factory(**settings: Any) -> Desk:
+        from creator_bot.desktop.app import DesktopApp
+
+        shown, opened = [], []
+        config = Settings(telegram_token="", owner_chat_id=1, **settings)
+        app = DesktopApp(
+            config,
+            Database(),
+            clock,
+            show_os=lambda title, body: shown.append((title, body)) or True,
+            autostart=FakeAutostart(),
+            open_url=opened.append,
+        )
+        return Desk(app, shown, opened)
+
+    return factory

@@ -48,10 +48,10 @@ class Settings:
     google_refresh_token: str | None = None
 
     @classmethod
-    def from_env(cls) -> Settings:
+    def from_env(cls, require_token: bool = True) -> Settings:
         env = os.environ.get
         token = env("TELEGRAM_BOT_TOKEN", "").strip()
-        if not token:
+        if not token and require_token:
             raise SystemExit("חסר TELEGRAM_BOT_TOKEN – העתק את .env.example ל-.env ומלא אותו (ראה README).")
         owner = env("OWNER_CHAT_ID", "").strip()
         week_start = env("WEEK_START", "sunday").strip().lower()

@@ -1,0 +1,4 @@
+# Optional: a native app window instead of a browser tab (Windows / macOS).
+# If this fails to install, Creator Desk simply opens in your browser.
+# On Linux install the GTK or Qt flavour yourself, e.g.  pip install "pywebview[qt]"
+pywebview>=5.3; sys_platform == "win32" or sys_platform == "darwin"
