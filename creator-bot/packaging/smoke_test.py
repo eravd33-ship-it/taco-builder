@@ -32,7 +32,7 @@ def main(port: int) -> int:
     page = urllib.request.urlopen(f"{base}/", timeout=5).read().decode()
     token = re.search(r'name="token" content="([^"]+)"', page)
     assert token and "__TOKEN__" not in page, "the page has no session token"
-    for asset in ("/app.js", "/app.css", "/favicon.svg"):
+    for asset in ("/app.js", "/app.css", "/favicon.svg", "/icon.png"):
         assert urllib.request.urlopen(base + asset, timeout=5).status == 200, f"{asset} was not packaged"
 
     def call(method: str, path: str) -> dict:

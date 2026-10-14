@@ -52,10 +52,7 @@ button { cursor: pointer; }
   display: flex; flex-direction: column; gap: 22px;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; padding: 0 8px; }
-.logo {
-  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
-  background: var(--accent); color: var(--accent-text); font-size: 14px;
-}
+.logo { width: 36px; height: 36px; flex: none; }
 nav { display: flex; flex-direction: column; gap: 4px; }
 nav button {
   display: flex; align-items: center; gap: 12px; width: 100%;

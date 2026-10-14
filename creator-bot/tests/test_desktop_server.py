@@ -64,6 +64,9 @@ def test_serves_the_app_with_the_token_and_strict_headers(server):
     assert headers["X-Content-Type-Options"] == "nosniff"
 
     assert fetch(server, "GET", "/app.js")[0] == 200
+    status, headers, body = fetch(server, "GET", "/icon.png")
+    assert status == 200 and headers["Content-Type"] == "image/png" and body.startswith(b"\x89PNG")
+    assert b"<svg" in fetch(server, "GET", "/favicon.svg")[2]
     assert fetch(server, "GET", "/app.css")[1]["Content-Type"].startswith("text/css")
     assert fetch(server, "GET", "/../config.py")[0] == 404
     assert fetch(server, "POST", "/")[0] == 405

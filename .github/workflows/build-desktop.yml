@@ -63,17 +63,22 @@ jobs:
           cat "$APPDATA/CreatorDesk/creator-desk.log" 2>/dev/null || true
           cat "$HOME/Library/Application Support/CreatorDesk/creator-desk.log" 2>/dev/null || true
 
-      - name: Zip (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: Compress-Archive -Path "dist/Creator Desk" -DestinationPath "Creator-Desk-Windows.zip"
-
       - name: Zip (macOS)
         if: runner.os == 'macOS'
         run: ditto -c -k --keepParent "dist/Creator Desk.app" "Creator-Desk-macOS.zip"
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
         with:
-          name: Creator-Desk-${{ matrix.name }}
-          path: creator-bot/Creator-Desk-${{ matrix.name }}.zip
+          name: Creator-Desk-Windows
+          path: creator-bot/dist/Creator Desk
+          if-no-files-found: error
+
+      - name: Upload (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Creator-Desk-macOS
+          path: creator-bot/Creator-Desk-macOS.zip
           if-no-files-found: error

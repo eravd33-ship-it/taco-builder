@@ -18,6 +18,13 @@ ROOT = Path(__file__).resolve().parent
 SEPARATOR = ";" if sys.platform == "win32" else ":"
 
 
+def icon_arguments() -> list[str]:
+    """The app icon: .ico for the Windows exe, .icns for the macOS app (Linux has no embedded icons)."""
+    name = {"win32": "creator-desk.ico", "darwin": "creator-desk.icns"}.get(sys.platform)
+    icon = ROOT / "packaging" / "icons" / name if name else None
+    return ["--icon", str(icon)] if icon and icon.exists() else []
+
+
 def main() -> int:
     ui = ROOT / "creator_bot" / "desktop" / "ui"
     command = [
@@ -29,6 +36,7 @@ def main() -> int:
         "--add-data", f"{ui}{SEPARATOR}creator_bot/desktop/ui",
         "--collect-data", "tzdata",
         "--hidden-import", "webview",
+        *icon_arguments(),
         "--distpath", str(ROOT / "dist"),
         "--workpath", str(ROOT / "build"),
         "--specpath", str(ROOT / "build"),

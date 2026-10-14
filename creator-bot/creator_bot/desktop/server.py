@@ -26,7 +26,13 @@ log = logging.getLogger(__name__)
 
 MAX_BODY = 64 * 1024
 DRAIN_LIMIT = 1024 * 1024  # how much of a rejected request body we still read, so the reply is not lost
-STATIC = {"/": "index.html", "/app.js": "app.js", "/app.css": "app.css", "/favicon.svg": "favicon.svg"}
+STATIC = {
+    "/": "index.html",
+    "/app.js": "app.js",
+    "/app.css": "app.css",
+    "/favicon.svg": "favicon.svg",
+    "/icon.png": "icon.png",
+}
 CSP = "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'"
 
 
