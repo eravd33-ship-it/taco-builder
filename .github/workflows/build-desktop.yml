@@ -40,7 +40,6 @@ jobs:
           python -m pip install -r requirements-dev.txt -r requirements-window.txt pyinstaller
 
       - name: Tests
-        continue-on-error: true # report problems, but still produce the app
         run: python -m pytest -q
 
       - name: Build the app

@@ -25,6 +25,7 @@ from .runtime import Runtime
 log = logging.getLogger(__name__)
 
 MAX_BODY = 64 * 1024
+DRAIN_LIMIT = 1024 * 1024  # how much of a rejected request body we still read, so the reply is not lost
 STATIC = {"/": "index.html", "/app.js": "app.js", "/app.css": "app.css", "/favicon.svg": "favicon.svg"}
 CSP = "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; frame-ancestors 'none'"
 
@@ -86,20 +87,34 @@ class _Handler(BaseHTTPRequestHandler):
     def _json(self, status: int, data: Any) -> None:
         self._send(status, "application/json; charset=utf-8", json.dumps(data, ensure_ascii=False).encode())
 
-    def _read_json(self) -> dict[str, Any] | None:
-        length = int(self.headers.get("Content-Length") or 0)
-        if length == 0:
+    def _read_body(self) -> bytes | None:
+        """Always consume the request body first. Closing a connection with unread data makes some systems
+        (macOS) reset it, and the client then never sees our 401/403/400 reply. None = unusable body."""
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return None
+        if length < 0:
+            return None
+        raw = self.rfile.read(min(length, DRAIN_LIMIT)) if length else b""
+        return raw if length <= MAX_BODY else None
+
+    def _parse_json(self, raw: bytes | None) -> dict[str, Any] | None:
+        if raw is None:
+            return None
+        if not raw:
             return {}
-        if length > MAX_BODY or not (self.headers.get("Content-Type") or "").startswith("application/json"):
+        if not (self.headers.get("Content-Type") or "").startswith("application/json"):
             return None
         try:
-            body = json.loads(self.rfile.read(length))
+            body = json.loads(raw)
         except ValueError:
             return None
         return body if isinstance(body, dict) else None
 
     # -- routing ------------------------------------------------------------------------
     def _dispatch(self, method: str) -> None:
+        raw = self._read_body()
         if self.headers.get("Host") not in self.server.allowed_hosts:
             return self._json(403, {"error": "forbidden"})
         parts = urlsplit(self.path)
@@ -109,7 +124,7 @@ class _Handler(BaseHTTPRequestHandler):
         public = parts.path == "/api/ping"
         if not public and not hmac.compare_digest(self.headers.get("X-Token", ""), self.server.token):
             return self._json(401, {"error": "unauthorized"})
-        body = self._read_json()
+        body = self._parse_json(raw)
         if body is None:
             return self._json(400, {"error": "bad request"})
         try:

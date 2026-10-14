@@ -103,6 +103,15 @@ def test_bodies_must_be_json_objects_of_reasonable_size(server):
     )
 
 
+def test_rejections_with_a_body_still_deliver_their_reply(server):
+    big = {"text": "x" * 200_000}  # rejected for its size, wrong token, wrong host: always a clean HTTP reply
+    assert fetch(server, "POST", "/api/ideas", big, AUTH)[0] == 400
+    assert fetch(server, "POST", "/api/ideas", {"text": "hi"}, {"X-Token": "stale"})[0] == 401
+    assert fetch(server, "POST", "/api/ideas", big, {"X-Token": "stale"})[0] == 401
+    assert fetch(server, "POST", "/api/ideas", {"text": "hi"}, {**AUTH, "Host": "evil.example"})[0] == 403
+    assert fetch(server, "POST", "/api/ideas", headers={**AUTH, "Content-Length": "abc"}, raw="x")[0] == 400
+
+
 def test_full_round_trip_with_unicode(server):
     fetch(server, "POST", "/api/ideas", {"text": "סרטון על 🌮 טאקו"}, AUTH)
     _, _, body = fetch(server, "GET", "/api/ideas", headers=AUTH)
