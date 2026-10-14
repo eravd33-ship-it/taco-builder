@@ -1,6 +1,7 @@
 """📈 YouTube stats (optional): daily snapshot of views/subscribers, milestones.
 
-Needs YOUTUBE_API_KEY and YOUTUBE_CHANNEL (channel id "UC..." or "@handle").
+Either YOUTUBE_API_KEY + YOUTUBE_CHANNEL (channel id "UC..." or "@handle"), or a Google sign-in that was
+granted the youtube.readonly scope (then the signed-in user's own channel is used).
 
 Events emitted:
   channel.milestone(metric, value) – e.g. ("subscribers", 1000)
@@ -19,6 +20,7 @@ from telegram.ext import JobQueue
 from ..config import Settings
 from ..core import ui
 from ..core.module import Command, Ctx, DigestSection, MenuButton, Module
+from ..google_auth import YOUTUBE_SCOPE, GoogleToken
 from ..storage import Database
 
 log = logging.getLogger(__name__)
@@ -64,23 +66,36 @@ class ChannelStats:
 
 
 class YouTubeClient:
-    def __init__(self, api_key: str, channel: str, transport: httpx.AsyncBaseTransport | None = None) -> None:
+    def __init__(
+        self,
+        api_key: str | None,
+        channel: str | None,
+        transport: httpx.AsyncBaseTransport | None = None,
+        token: GoogleToken | None = None,
+    ) -> None:
         self.api_key = api_key
-        self.channel = channel.strip()
+        self.channel = (channel or "").strip()
         self.transport = transport
+        self.token = token  # signed-in mode: the user's own channel, no API key needed
 
     async def fetch(self) -> ChannelStats:
-        params = {"part": "statistics,snippet", "key": self.api_key}
-        if self.channel.startswith("@"):
-            params["forHandle"] = self.channel
+        params = {"part": "statistics,snippet"}
+        headers = {}
+        if self.token is not None:
+            params["mine"] = "true"
+            headers["Authorization"] = f"Bearer {await self.token.get()}"
         else:
-            params["id"] = self.channel
+            params["key"] = self.api_key or ""
+            if self.channel.startswith("@"):
+                params["forHandle"] = self.channel
+            else:
+                params["id"] = self.channel
         async with httpx.AsyncClient(timeout=20, transport=self.transport) as client:
-            response = await client.get(API_URL, params=params)
+            response = await client.get(API_URL, params=params, headers=headers)
         response.raise_for_status()
         items = response.json().get("items") or []
         if not items:
-            raise LookupError(f"YouTube channel not found: {self.channel}")
+            raise LookupError(f"YouTube channel not found: {self.channel or 'mine'}")
         stats = items[0]["statistics"]
         subscribers = None if stats.get("hiddenSubscriberCount") else int(stats.get("subscriberCount", 0))
         return ChannelStats(
@@ -133,13 +148,24 @@ class YouTubeStatsModule(Module):
 
     @classmethod
     def is_enabled(cls, settings: Settings) -> bool:
-        return bool(settings.youtube_api_key and settings.youtube_channel)
+        if settings.youtube_api_key and settings.youtube_channel:
+            return True
+        signed_in = settings.google_client_id and settings.google_client_secret and settings.google_refresh_token
+        return bool(signed_in and YOUTUBE_SCOPE in settings.google_scopes)
 
     def setup(self) -> None:
         self.core.db.migrate(self.name, SCHEMA)
         self.service = StatsService(self.core.db)
         settings = self.core.settings
-        self.client = YouTubeClient(settings.youtube_api_key, settings.youtube_channel, self.client_transport)
+        token = None
+        if not (settings.youtube_api_key and settings.youtube_channel):
+            token = GoogleToken(
+                settings.google_client_id,
+                settings.google_client_secret,
+                settings.google_refresh_token,
+                self.client_transport,
+            )
+        self.client = YouTubeClient(settings.youtube_api_key, settings.youtube_channel, self.client_transport, token)
         self.channel_title: str | None = None
 
     def menu_buttons(self) -> list[MenuButton]:

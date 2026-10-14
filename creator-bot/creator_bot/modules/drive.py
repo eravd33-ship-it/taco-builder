@@ -22,6 +22,7 @@ from telegram.ext import JobQueue
 from ..config import Settings
 from ..core import ui
 from ..core.module import Command, Ctx, MenuButton, Module
+from ..google_auth import DRIVE_SCOPE
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +114,8 @@ class DriveModule(Module):
 
     @classmethod
     def is_enabled(cls, settings: Settings) -> bool:
-        return bool(settings.google_client_id and settings.google_client_secret and settings.google_refresh_token)
+        signed_in = settings.google_client_id and settings.google_client_secret and settings.google_refresh_token
+        return bool(signed_in and (not settings.google_scopes or DRIVE_SCOPE in settings.google_scopes))
 
     def setup(self) -> None:
         self.core.db.migrate(self.name, SCHEMA)
@@ -122,6 +124,9 @@ class DriveModule(Module):
             s.google_client_id, s.google_client_secret, s.google_refresh_token, self.client_transport
         )
         self.core.events.on("video.created", self._on_video_created)
+
+    def teardown(self) -> None:
+        self.core.events.off("video.created", self._on_video_created)
 
     def menu_buttons(self) -> list[MenuButton]:
         return [MenuButton("📁 דרייב", self.show_folders, order=60)]

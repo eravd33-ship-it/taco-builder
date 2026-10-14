@@ -66,6 +66,9 @@ class Module:
     def setup(self) -> None:
         """Create tables (self.core.db.migrate) and subscribe to events."""
 
+    def teardown(self) -> None:
+        """Undo what setup() subscribed to, when the module is unloaded at runtime."""
+
     def menu_buttons(self) -> list[MenuButton]:
         return []
 

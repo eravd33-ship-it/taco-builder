@@ -11,6 +11,7 @@ send requests to localhost:
 from __future__ import annotations
 
 import hmac
+import html
 import json
 import logging
 import mimetypes
@@ -124,6 +125,8 @@ class _Handler(BaseHTTPRequestHandler):
         if self.headers.get("Host") not in self.server.allowed_hosts:
             return self._json(403, {"error": "forbidden"})
         parts = urlsplit(self.path)
+        if parts.path == "/oauth/callback":
+            return self._oauth_callback(method, dict(parse_qsl(parts.query)))
         if not parts.path.startswith("/api/"):
             return self._static(method, parts.path)
 
@@ -138,6 +141,21 @@ class _Handler(BaseHTTPRequestHandler):
         except TimeoutError:
             return self._json(504, {"error": "timeout"})
         self._json(status, data)
+
+    def _oauth_callback(self, method: str, query: dict[str, str]) -> None:
+        """Where Google sends the browser after sign-in. No token can be attached to a redirect, so the app
+        itself only accepts it for a sign-in it started (secret `state`, one attempt, ten minutes)."""
+        if method != "GET":
+            return self._json(405, {"error": "method not allowed"})
+        status, data = self.server.runtime.request("GET", "/oauth/callback", query, {})
+        message = html.escape(str(data.get("message") or data.get("error") or ""))
+        page = (
+            '<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            '<title>Creator Desk</title><link rel="stylesheet" href="/app.css">'
+            f'<main><div class="card empty"><span class="big">🎬</span><p>{message}</p></div></main>'
+        )
+        self._send(status, "text/html; charset=utf-8", page.encode())
 
     def _static(self, method: str, path: str) -> None:
         name = STATIC.get(path)

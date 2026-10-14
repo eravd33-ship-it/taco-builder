@@ -115,6 +115,7 @@ def main(argv: list[str] | None = None) -> int:
         server = DesktopServer(("127.0.0.1", args.port), runtime, secrets.token_urlsafe(32))
     except OSError:  # the port belongs to something else: take any free one
         server = DesktopServer(("127.0.0.1", 0), runtime, secrets.token_urlsafe(32))
+    runtime.app.port = server.port
     threading.Thread(target=server.serve_forever, name="creator-desk-http", daemon=True).start()
     log.info("%s %s is running at %s (data: %s)", APP_TITLE, __version__, server.url, settings.db_path.parent)
 

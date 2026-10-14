@@ -46,6 +46,7 @@ class Settings:
     google_client_id: str | None = None
     google_client_secret: str | None = None
     google_refresh_token: str | None = None
+    google_scopes: frozenset[str] = frozenset()  # granted scopes; empty = unknown (e.g. set through .env)
 
     @classmethod
     def from_env(cls, require_token: bool = True) -> Settings:

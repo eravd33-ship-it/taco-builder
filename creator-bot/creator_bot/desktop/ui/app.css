@@ -191,3 +191,10 @@ a { color: var(--accent); }
   .toasts { bottom: 84px; }
   input[type="date"], input[type="time"] { max-width: 100%; }
 }
+
+ol.steps { padding-inline-start: 22px; }
+ol.steps li { margin: 8px 0; }
+.note-box { background: var(--accent-soft); border-radius: 12px; padding: 10px 14px; }
+.labeled { display: block; }
+.labeled > span { display: block; margin-bottom: 4px; }
+.labeled .field { display: block; width: 100%; }

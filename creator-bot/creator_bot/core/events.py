@@ -24,6 +24,10 @@ class EventBus:
     def on(self, event: str, handler: EventHandler) -> None:
         self._handlers[event].append(handler)
 
+    def off(self, event: str, handler: EventHandler) -> None:
+        if handler in self._handlers.get(event, []):
+            self._handlers[event].remove(handler)
+
     async def emit(self, event: str, **payload: Any) -> None:
         for handler in self._handlers.get(event, []):
             try:

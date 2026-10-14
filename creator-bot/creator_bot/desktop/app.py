@@ -11,9 +11,11 @@ connection is never shared between threads.
 from __future__ import annotations
 
 import asyncio
+import hmac
 import logging
 import os
 import re
+import secrets
 import webbrowser
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass, field, replace
@@ -27,9 +29,12 @@ import httpx
 from ..config import Settings
 from ..core import ui
 from ..core.app import Core
+from ..google_auth import CLIENT_ID_SUFFIX, YOUTUBE_SCOPE, build_auth_url, exchange_code, make_pkce
 from ..modules import ALL_MODULES
+from ..modules.drive import DriveModule
 from ..modules.motivation import UPLOADS_GOAL, VIEWS_GOAL
 from ..modules.videos import Video, VideoStep
+from ..modules.youtube_stats import YouTubeStatsModule
 from ..storage import Database
 from . import __version__
 from .autostart import Autostart
@@ -38,7 +43,17 @@ from .notifier import DesktopBot, Feed, show_os_notification
 log = logging.getLogger(__name__)
 
 OWNER = 1  # the desktop app has exactly one user; this id only satisfies Core.notify()
-OPEN_HOSTS = {"drive.google.com", "docs.google.com", "www.youtube.com", "youtube.com", "studio.youtube.com"}
+OPEN_HOSTS = {
+    "drive.google.com",
+    "docs.google.com",
+    "www.youtube.com",
+    "youtube.com",
+    "studio.youtube.com",
+    "console.cloud.google.com",  # the one-time setup guide
+    "accounts.google.com",
+    "myaccount.google.com",
+}
+SIGN_IN_VALID_FOR = timedelta(minutes=10)
 WINDOW_ACTIVE_FOR = timedelta(seconds=45)  # how long a "window is in front" heartbeat counts
 RETRY_AFTER = timedelta(minutes=30)
 _HHMM = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
@@ -76,8 +91,12 @@ class DesktopApp:
         autostart: Autostart | None = None,
         open_url: Callable[[str], Any] = webbrowser.open,
     ) -> None:
-        self.settings = settings
+        self._env_settings = settings  # what the environment / .env says
         self.db = db
+        self.settings = self._effective_settings()
+        self.port: int | None = None  # set once the local server is listening (the sign-in redirects back to it)
+        self.google_transport: Any = None  # tests replace the network
+        self._pending_sign_in: tuple[str, str, datetime] | None = None  # (state, verifier, expires)
         self.feed = Feed()
         self.show_os = show_os
         self.autostart = autostart or Autostart()
@@ -88,7 +107,7 @@ class DesktopApp:
         self._retry_at: dict[str, datetime] = {}
         self._busy: set[str] = set()
 
-        self.core = Core(settings, db, clock or _local_now)
+        self.core = Core(self.settings, db, clock or _local_now)
         self.core.bot = DesktopBot(self.feed, self.core.now, self._os_enabled, self.window_active, show_os)
         self.core.load(ALL_MODULES)
 
@@ -464,7 +483,7 @@ class DesktopApp:
             await self.stats.refresh()
         except (httpx.HTTPError, LookupError, KeyError, ValueError):
             log.exception("Could not refresh YouTube stats")
-            raise ApiError(502, "לא הצלחתי למשוך נתונים מיוטיוב. כדאי לבדוק את המפתח ואת שם הערוץ.") from None
+            raise ApiError(502, "לא הצלחתי למשוך נתונים מיוטיוב. כדאי לבדוק את החיבור (בהגדרות) או את המפתח.") from None
         return {"channel": self._channel_json(self.core.today())}
 
     async def drive_backup(self, req: Request) -> dict[str, Any]:
@@ -492,6 +511,137 @@ class DesktopApp:
         if self.quit_callback:
             self.quit_callback()
         return {"ok": True}
+
+    # -- Google sign-in (YouTube stats + Drive) ----------------------------------------------
+    def _google_from_env(self) -> bool:
+        env = self._env_settings
+        return bool(env.google_client_id and env.google_client_secret and env.google_refresh_token)
+
+    def _effective_settings(self) -> Settings:
+        """The environment's settings, plus the Google sign-in saved by the app (unless .env has its own)."""
+        env = self._env_settings
+        if self._google_from_env():
+            return env
+        saved = {key: self.db.get(f"google.{key}") for key in ("client_id", "client_secret", "refresh_token", "scopes")}
+        return replace(
+            env,
+            google_client_id=saved["client_id"] or env.google_client_id,
+            google_client_secret=saved["client_secret"] or env.google_client_secret,
+            google_refresh_token=saved["refresh_token"] or env.google_refresh_token,
+            google_scopes=frozenset((saved["scopes"] or "").split()),
+        )
+
+    def reload_integrations(self) -> None:
+        """Apply a changed sign-in right away: unload and load again the two optional modules."""
+        for name in ("youtube_stats", "drive"):
+            self.core.unload(name)
+        self.settings = self._effective_settings()
+        self.core.settings = self.settings
+        self.core.load([YouTubeStatsModule, DriveModule])
+        order = {cls.name: position for position, cls in enumerate(ALL_MODULES)}  # keep the digest order stable
+        self.core.modules = dict(sorted(self.core.modules.items(), key=lambda item: order[item[0]]))
+        self.stats, self.drive = self.core.get("youtube_stats"), self.core.get("drive")
+        self._retry_at.clear()
+
+    def _redirect_uri(self) -> str:
+        if self.port is None:
+            raise ApiError(500, "השרת המקומי עוד לא מוכן")
+        return f"http://127.0.0.1:{self.port}/oauth/callback"
+
+    def _save_client(self, client_id: Any, client_secret: Any) -> None:
+        client_id, client_secret = str(client_id or "").strip(), str(client_secret or "").strip()
+        if not client_id.endswith(CLIENT_ID_SUFFIX):
+            raise ApiError(400, f"מזהה הלקוח (Client ID) אמור להסתיים ב-{CLIENT_ID_SUFFIX}")
+        if len(client_secret) < 10:
+            raise ApiError(400, "חסר סוד הלקוח (Client secret)")
+        if client_id != self.db.get("google.client_id"):
+            for key in ("refresh_token", "scopes"):  # a sign-in belongs to the client that made it
+                self.db.set(f"google.{key}", None)
+        self.db.set("google.client_id", client_id)
+        self.db.set("google.client_secret", client_secret)
+        self.reload_integrations()  # a changed client means the old sign-in no longer applies
+
+    async def google_get(self, req: Request) -> dict[str, Any]:
+        settings = self.settings
+        return {
+            "source": "env" if self._google_from_env() else "app",
+            "client_id": settings.google_client_id or "",
+            "has_client": bool(settings.google_client_id and settings.google_client_secret),
+            "connected": bool(settings.google_client_id and settings.google_refresh_token),
+            "youtube": self.stats is not None,
+            "drive": self.drive is not None,
+            "waiting": self._pending_sign_in is not None and self.core.now() < self._pending_sign_in[2],
+            "redirect_uri": f"http://127.0.0.1:{self.port}/oauth/callback" if self.port else None,
+        }
+
+    async def google_connect(self, req: Request) -> dict[str, Any]:
+        """Save the client (if given), then send the user to Google's consent page in their own browser."""
+        if self._google_from_env():
+            raise ApiError(409, "החיבור מוגדר דרך קובץ .env")
+        if "client_id" in req.body or "client_secret" in req.body:
+            self._save_client(req.body.get("client_id"), req.body.get("client_secret"))
+        client_id = self.db.get("google.client_id")
+        if not client_id or not self.db.get("google.client_secret"):
+            raise ApiError(400, "צריך להזין מזהה לקוח וסוד לקוח")
+        verifier, challenge = make_pkce()
+        state = secrets.token_urlsafe(24)
+        self._pending_sign_in = (state, verifier, self.core.now() + SIGN_IN_VALID_FOR)
+        url = build_auth_url(client_id, self._redirect_uri(), state, challenge)
+        self.open_url(url)  # the system browser: Google refuses to sign in inside embedded windows
+        return {"url": url}
+
+    async def oauth_callback(self, req: Request) -> dict[str, Any]:
+        """Google sends the browser back here with a one-time code. Only a sign-in WE started is accepted."""
+        pending, self._pending_sign_in = self._pending_sign_in, None  # one attempt per sign-in
+        state = req.query.get("state", "")
+        if pending is None or self.core.now() > pending[2] or not hmac.compare_digest(state, pending[0]):
+            raise ApiError(400, "הבקשה פגה או לא תקינה. כדאי להתחיל מחדש מתוך האפליקציה.")
+        code = req.query.get("code")
+        if req.query.get("error") or not code:
+            raise ApiError(400, "החיבור בוטל בגוגל. אפשר לנסות שוב מתוך האפליקציה.")
+        try:
+            tokens = await exchange_code(
+                self.db.get("google.client_id"),
+                self.db.get("google.client_secret"),
+                code,
+                pending[1],
+                self._redirect_uri(),
+                self.google_transport,
+            )
+        except httpx.HTTPError:
+            log.exception("Google sign-in failed")
+            raise ApiError(
+                502, "גוגל דחתה את החיבור. כדאי לבדוק שמזהה הלקוח והסוד נכונים ושהסוג הוא Desktop app."
+            ) from None
+        if not tokens.get("refresh_token"):
+            raise ApiError(400, "גוגל לא החזירה הרשאה קבועה. נסה שוב, ובמסך האישור השאר את כל ההרשאות מסומנות.")
+        self.db.set("google.refresh_token", tokens["refresh_token"])
+        self.db.set("google.scopes", str(tokens.get("scope", "")))
+        self.reload_integrations()
+        self._spawn(self._after_sign_in())
+        return {"message": "✅ החיבור הושלם! אפשר לסגור את החלון הזה ולחזור ל-Creator Desk."}
+
+    async def _after_sign_in(self) -> None:
+        granted = self.settings.google_scopes
+        missing = [name for name, module in (("יוטיוב", self.stats), ("דרייב", self.drive)) if module is None]
+        text = "🔌 <b>חובר לחשבון גוגל</b>"
+        if missing:
+            text += f"\nלא ניתנה הרשאה ל: {', '.join(missing)}. אפשר להתחבר מחדש ולסמן את כל ההרשאות."
+        await self.core.notify(text)
+        if self.stats is not None and YOUTUBE_SCOPE in granted:
+            try:
+                await self.stats.refresh()
+            except (httpx.HTTPError, LookupError, KeyError, ValueError):
+                log.exception("First YouTube refresh after sign-in failed")
+
+    async def google_disconnect(self, req: Request) -> dict[str, Any]:
+        if self._google_from_env():
+            raise ApiError(409, "החיבור מוגדר דרך קובץ .env")
+        for key in ("client_id", "client_secret", "refresh_token", "scopes"):
+            self.db.set(f"google.{key}", None)
+        self._pending_sign_in = None
+        self.reload_integrations()
+        return await self.google_get(req)
 
     # -- reminders (called every ~30 s by the runtime) -------------------------------------
     async def tick(self) -> None:
@@ -572,6 +722,10 @@ ROUTES: list[tuple[str, re.Pattern[str], str]] = [
         ("POST", r"/api/test-notification", "test_notification"),
         ("POST", r"/api/stats/refresh", "stats_refresh"),
         ("POST", r"/api/drive/backup", "drive_backup"),
+        ("GET", r"/api/google", "google_get"),
+        ("POST", r"/api/google/connect", "google_connect"),
+        ("DELETE", r"/api/google", "google_disconnect"),
+        ("GET", r"/oauth/callback", "oauth_callback"),
         ("POST", r"/api/open", "open_link"),
         ("POST", r"/api/quit", "quit"),
     ]

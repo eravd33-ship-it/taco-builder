@@ -73,6 +73,7 @@ class Core:
 
     # -- modules ----------------------------------------------------------------
     def load(self, module_classes: Iterable[type[Module]]) -> None:
+        created: list[Module] = []
         for cls in module_classes:
             if cls.name in self.settings.disabled_modules:
                 log.info("Module %s disabled by DISABLED_MODULES", cls.name)
@@ -82,10 +83,17 @@ class Core:
                 continue
             if cls.name in self.modules:
                 raise ValueError(f"Two modules are named {cls.name!r}")
-            self.modules[cls.name] = cls(self)
-        for module in self.modules.values():
+            module = cls(self)
+            self.modules[cls.name] = module
+            created.append(module)
+        for module in created:  # only the new ones: loading again later must not subscribe twice
             module.setup()
         log.info("Loaded modules: %s", ", ".join(self.modules))
+
+    def unload(self, name: str) -> None:
+        module = self.modules.pop(name, None)
+        if module is not None:
+            module.teardown()
 
     def get(self, name: str) -> Any:
         return self.modules.get(name)
