@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creator Desk – האפליקציה לניהול ערוץ היוטיוב</title>
+  <meta name="description" content="אפליקציה למחשב שמתזמנת צילום, עריכה והעלאה, שולחת תזכורות ומעודדת אותך להמשיך ליצור. איפה להוריד ואיך להשתמש.">
+  <link rel="icon" href="creator-desk-icon.png" type="image/png">
+  <style>
+    :root { --bg:#fffbeb; --card:#fff; --text:#1c1917; --muted:#57534e; --line:#e7e5e4; --red:#d92d20; --red-soft:#fdecea; --ok:#067647; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 "Segoe UI", system-ui, -apple-system, "Noto Sans Hebrew", Arial, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px 56px; }
+    a { color: var(--red); }
+    .back { display: inline-block; margin-bottom: 16px; font-size: 15px; }
+    header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+    header img { width: 72px; height: 72px; flex: none; }
+    h1 { margin: 0; font-size: 30px; line-height: 1.2; }
+    .lead { color: var(--muted); margin: 4px 0 24px; }
+    h2 { font-size: 21px; margin: 0 0 12px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .btns { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+    .btn { display: inline-block; background: var(--red); color: #fff; text-decoration: none; font-weight: 700; border-radius: 12px; padding: 11px 20px; }
+    .btn:hover, .btn:focus-visible { filter: brightness(1.1); }
+    .btn.light { background: var(--red-soft); color: var(--red); }
+    ol, ul { margin: 8px 0 0; padding-inline-start: 24px; }
+    li { margin: 6px 0; }
+    details { border-top: 1px solid var(--line); padding: 10px 0; }
+    details:first-of-type { border-top: 0; }
+    summary { cursor: pointer; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .grid div { background: #fafaf9; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+    .grid b { display: block; margin-bottom: 2px; }
+    .note { background: var(--red-soft); border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 15px; }
+    code { background: #f5f5f4; border-radius: 6px; padding: 1px 6px; direction: ltr; unicode-bidi: isolate; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">← חזרה לבניית הטאקו</a>
+
+  <header>
+    <img src="creator-desk-icon.png" alt="" width="72" height="72">
+    <div>
+      <h1>Creator Desk</h1>
+      <div class="lead">העוזר האישי לערוץ היוטיוב שלך, על המחשב</div>
+    </div>
+  </header>
+  <p class="lead">מתזמן כל סרטון (צילום ← עריכה ← העלאה), מזכיר בזמן, דוחף אותך קדימה עם מוטיבציה ויעדים, ושומר את הרעיונות שלך. בלי חשבונות ובלי אינטרנט.</p>
+
+  <section class="card" aria-labelledby="where">
+    <h2 id="where">📥 איפה האפליקציה?</h2>
+
+    <div id="release" hidden>
+      <p>הגרסה האחרונה מוכנה להורדה:</p>
+      <div class="btns" id="release-buttons"></div>
+    </div>
+
+    <div id="fallback">
+      <p>האפליקציה נבנית אוטומטית ב-GitHub, בנפרד ל-Windows ול-Mac:</p>
+      <ol>
+        <li>פותחים את <a href="https://github.com/eravd33-ship-it/taco-builder/actions/workflows/build-desktop.yml">דף הבניות ב-GitHub</a> (צריך להיות מחובר לחשבון) ולוחצים על הריצה האחרונה עם סימן ✅.</li>
+        <li>גוללים לתחתית הדף, לחלק <b><bdi>Artifacts</bdi></b>, ומורידים את <code>Creator-Desk-Windows</code> או את <code>Creator-Desk-macOS</code>.</li>
+      </ol>
+      <div class="btns"><a class="btn" href="https://github.com/eravd33-ship-it/taco-builder/actions/workflows/build-desktop.yml">לדף ההורדות ב-GitHub</a></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="how">
+    <h2 id="how">🚀 איך מפעילים?</h2>
+    <details open>
+      <summary>Windows</summary>
+      <ol>
+        <li>מחלצים את קובץ ה-<bdi>zip</bdi>: קליק ימני ואז <b><bdi>Extract All</bdi></b>.</li>
+        <li>פותחים את <code>Creator Desk.exe</code> מהתיקייה שנוצרה.</li>
+        <li>אם מופיעה האזהרה <bdi>Windows protected your PC</bdi>: לוחצים <b><bdi>More info</bdi></b> ואז <b><bdi>Run anyway</bdi></b>. זה קורה כי האפליקציה עוד לא חתומה.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>Mac</summary>
+      <ol>
+        <li>מחלצים את ה-<bdi>zip</bdi> בלחיצה כפולה עליו.</li>
+        <li>קליק ימני על <code>Creator Desk</code>, ואז <b><bdi>Open</bdi></b>, ושוב <b><bdi>Open</bdi></b> בחלון האזהרה.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>מהקוד, אם יש לך <bdi>Python</bdi></summary>
+      <ol>
+        <li>מורידים את הריפו מ-<a href="https://github.com/eravd33-ship-it/taco-builder">GitHub</a> ונכנסים לתיקייה <code>creator-bot</code>.</li>
+        <li>Windows: לחיצה כפולה על <code>Creator Desk.bat</code>. Mac: <code>Creator Desk.command</code>. Linux: <code>./creator-desk.sh</code>.</li>
+      </ol>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="inside">
+    <h2 id="inside">🧭 מה יש בפנים?</h2>
+    <div class="grid">
+      <div><b>📋 היום</b>המשימות להיום, סימון "בוצע" או "מחר" בלחיצה, ומשפט מוטיבציה.</div>
+      <div><b>🎬 סרטונים</b>שם ותאריך פרסום, והצילום, העריכה וההעלאה מתוזמנים לבד.</div>
+      <div><b>🔁 משימות קבועות</b>כמו "להגיב לתגובות", בימים שתבחר.</div>
+      <div><b>💡 רעיונות</b>שומרים רעיון, ובלחיצה הוא הופך לסרטון מתוזמן.</div>
+      <div><b>🎯 יעדים</b>יעד העלאות שבועי, יעד צפיות חודשי ורצף שבועות.</div>
+      <div><b>🔔 התראות</b>סיכום בבוקר וצ'ק-אין בערב, כחלון קופץ במחשב.</div>
+    </div>
+    <div class="note"><b>חשוב:</b> התזכורות מגיעות רק כשהאפליקציה פתוחה. אפשר למזער אותה, או להפעיל בהגדרות <b>"הפעלה אוטומטית עם המחשב"</b>.</div>
+  </section>
+
+  <section class="card" aria-labelledby="more">
+    <h2 id="more">ℹ️ עוד</h2>
+    <ul>
+      <li>הנתונים נשמרים רק במחשב שלך, בקובץ אחד.</li>
+      <li>יש גם <b>בוט טלגרם</b> עם אותן יכולות, לתזכורות בטלפון.</li>
+      <li>מדריך מלא, חיבור ליוטיוב ולגוגל דרייב: <a href="https://github.com/eravd33-ship-it/taco-builder/blob/main/creator-bot/README.md">README ב-GitHub</a>.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+  // If the repository has a published release, offer its files as direct download buttons.
+  (function () {
+    var API = 'https://api.github.com/repos/eravd33-ship-it/taco-builder/releases/latest';
+    fetch(API, { headers: { Accept: 'application/vnd.github+json' } })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (release) {
+        var assets = (release.assets || []).filter(function (a) {
+          return /\.(zip|exe|dmg)$/i.test(a.name) && a.browser_download_url.indexOf('https://github.com/') === 0;
+        });
+        if (!assets.length) return;
+        var box = document.getElementById('release-buttons');
+        assets.forEach(function (a) {
+          var os = /win/i.test(a.name) ? 'Windows' : /mac|darwin|dmg/i.test(a.name) ? 'Mac' : a.name;
+          var link = document.createElement('a');
+          link.className = 'btn';
+          link.href = a.browser_download_url;
+          link.textContent = '⬇️ להורדה ל-' + os + ' (' + Math.max(1, Math.round(a.size / 1048576)) + 'MB)';
+          box.appendChild(link);
+        });
+        document.getElementById('release').hidden = false;
+        document.getElementById('fallback').hidden = true;
+      })
+      .catch(function () { /* no release yet or offline: the instructions above stay */ });
+  })();
+</script>
+</body>
+</html>
