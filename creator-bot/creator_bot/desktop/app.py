@@ -26,6 +26,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from ..assistant import KEY_PREFIX, MODEL_LABEL, Assistant, AssistantError, chat_system, ideas_system, parse_ideas
 from ..config import Settings
 from ..core import ui
 from ..core.app import Core
@@ -52,8 +53,11 @@ OPEN_HOSTS = {
     "console.cloud.google.com",  # the one-time setup guide
     "accounts.google.com",
     "myaccount.google.com",
+    "console.anthropic.com",  # getting an API key for the assistant
 }
 SIGN_IN_VALID_FOR = timedelta(minutes=10)
+CHAT_LIMIT = 30  # messages kept and sent to the assistant
+HTTP_FOR_KIND = {"key": 400, "billing": 402, "rate": 429, "refusal": 422, "connection": 502, "server": 502}
 WINDOW_ACTIVE_FOR = timedelta(seconds=45)  # how long a "window is in front" heartbeat counts
 RETRY_AFTER = timedelta(minutes=30)
 _HHMM = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
@@ -90,6 +94,7 @@ class DesktopApp:
         show_os: Callable[[str, str], Any] = show_os_notification,
         autostart: Autostart | None = None,
         open_url: Callable[[str], Any] = webbrowser.open,
+        assistant_factory: Callable[[str], Assistant] = Assistant,
     ) -> None:
         self._env_settings = settings  # what the environment / .env says
         self.db = db
@@ -97,6 +102,11 @@ class DesktopApp:
         self.port: int | None = None  # set once the local server is listening (the sign-in redirects back to it)
         self.google_transport: Any = None  # tests replace the network
         self._pending_sign_in: tuple[str, str, datetime] | None = None  # (state, verifier, expires)
+        self._assistant_factory = assistant_factory
+        self._assistant: Assistant | None = None
+        self._assistant_key: str | None = None
+        self._chat: list[dict[str, str]] = []  # the conversation, kept while the app runs
+        self._asking = asyncio.Lock()
         self.feed = Feed()
         self.show_os = show_os
         self.autostart = autostart or Autostart()
@@ -643,6 +653,138 @@ class DesktopApp:
         self.reload_integrations()
         return await self.google_get(req)
 
+    # -- AI assistant ---------------------------------------------------------------------------
+    def _assistant_key_info(self) -> tuple[str | None, str | None]:
+        """(key, where it came from): a key saved in the app wins over the environment's."""
+        saved = self.db.get("assistant.api_key")
+        if saved:
+            return saved, "app"
+        if self._env_settings.anthropic_api_key:
+            return self._env_settings.anthropic_api_key, "env"
+        return None, None
+
+    def _get_assistant(self) -> Assistant:
+        key, _ = self._assistant_key_info()
+        if not key:
+            raise ApiError(409, "צריך קודם להזין מפתח API של Anthropic (בהגדרות או במסך העוזר).")
+        if self._assistant is None or key != self._assistant_key:
+            self._assistant, self._assistant_key = self._assistant_factory(key), key
+        return self._assistant
+
+    @staticmethod
+    def _ask_error(error: AssistantError) -> ApiError:
+        return ApiError(HTTP_FOR_KIND.get(error.kind, 502), error.message)
+
+    def _channel_context(self) -> str:
+        """A short, fresh snapshot of the channel for the model. Only what the user already sees in the app."""
+        day = self.core.today()
+        service = self.videos.service
+        lines = [f"הקשר על הערוץ (נכון ל-{day.isoformat()}):"]
+        week = self._week_json(day)
+        lines.append(
+            f"- יעד העלאות שבועי: {week['goal']}. פורסמו השבוע: {week['done']}. רצף שבועות ביעד: {week['streak']}."
+        )
+        active = service.active()[:10]
+        if active:
+            lines.append("- סרטונים בתהליך:")
+            for video in active:
+                step = video.current
+                stage = f"שלב נוכחי: {step.info.name} ביום {step.due.isoformat()}" if step else "מוכן"
+                lines.append(f'  • "{video.title}" (פרסום ב-{video.publish_date.isoformat()}, {stage})')
+        published = self.db.query(
+            "SELECT id FROM videos WHERE published_on IS NOT NULL ORDER BY published_on DESC LIMIT 8"
+        )
+        if published:
+            lines.append("- סרטונים שפורסמו לאחרונה:")
+            for row in published:
+                video = service.get(row["id"])
+                lines.append(f'  • "{video.title}" ({video.published_on.isoformat()})')
+        ideas = self.ideas.service.open(limit=15)
+        if ideas:
+            lines.append("- רעיונות שמורים שעוד לא הפכו לסרטון:")
+            lines += [f'  • "{idea.text}"' for idea in ideas]
+        channel = self._channel_json(day)
+        if channel and not channel.get("empty"):
+            subs = f", {channel['subscribers']:,} מנויים" if channel["subscribers"] is not None else ""
+            lines.append(f"- נתוני הערוץ (יוטיוב): {channel['views']:,} צפיות{subs}, {channel['videos']:,} סרטונים.")
+        return "\n".join(lines)
+
+    async def assistant_get(self, req: Request) -> dict[str, Any]:
+        key, source = self._assistant_key_info()
+        return {
+            "configured": bool(key),
+            "source": source,
+            "key_hint": f"…{key[-4:]}" if key else None,
+            "model": MODEL_LABEL,
+            "messages": [{"role": m["role"], "text": m["content"]} for m in self._chat],
+            "busy": self._asking.locked(),
+        }
+
+    async def assistant_put(self, req: Request) -> dict[str, Any]:
+        key = str(req.body.get("api_key") or "").strip()
+        if not key.startswith(KEY_PREFIX) or len(key) < 20:
+            raise ApiError(400, f"מפתח ה-API אמור להתחיל ב-{KEY_PREFIX}")
+        try:
+            await self._assistant_factory(key).check_key()  # nothing is saved unless the key really works
+        except AssistantError as error:
+            raise self._ask_error(error) from None
+        self.db.set("assistant.api_key", key)
+        self._assistant = None
+        return await self.assistant_get(req)
+
+    async def assistant_delete(self, req: Request) -> dict[str, Any]:
+        if self._assistant_key_info()[1] == "env":
+            raise ApiError(409, "המפתח מוגדר דרך קובץ .env")
+        self.db.set("assistant.api_key", None)
+        self._assistant = None
+        self._chat.clear()
+        return await self.assistant_get(req)
+
+    async def assistant_chat(self, req: Request) -> dict[str, Any]:
+        text = str(req.body.get("message") or "").strip()
+        if not text:
+            raise ApiError(400, "כתוב הודעה")
+        if len(text) > 4000:
+            raise ApiError(400, "ההודעה ארוכה מדי (עד 4,000 תווים)")
+        assistant = self._get_assistant()
+        if self._asking.locked():
+            raise ApiError(409, "העוזר עדיין עונה על ההודעה הקודמת")
+        async with self._asking:
+            history = [*self._chat, {"role": "user", "content": text}][-CHAT_LIMIT:]
+            while history and history[0]["role"] != "user":  # a conversation must open with the user
+                history.pop(0)
+            try:
+                reply = await assistant.ask(chat_system(self._channel_context()), history, effort="low")
+            except AssistantError as error:
+                raise self._ask_error(error) from None  # the question is not kept, so it can simply be sent again
+            self._chat = [*history, {"role": "assistant", "content": reply}]
+        return {"reply": reply}
+
+    async def assistant_clear(self, req: Request) -> dict[str, Any]:
+        self._chat.clear()
+        return {"ok": True}
+
+    async def assistant_ideas(self, req: Request) -> dict[str, Any]:
+        topic = str(req.body.get("topic") or "").strip()[:300]
+        avoid = [str(title)[:200] for title in (req.body.get("avoid") or [])[:40] if isinstance(title, str)]
+        assistant = self._get_assistant()
+        if self._asking.locked():
+            raise ApiError(409, "העוזר עדיין עונה על בקשה קודמת")
+        context = self._channel_context()
+        if avoid:
+            context += "\n- רעיונות שכבר הוצעו עכשיו ואין לחזור עליהם:\n" + "\n".join(
+                f'  • "{title}"' for title in avoid
+            )
+        prompt = f"רעיונות לסרטונים בנושא: {topic}" if topic else "תן לי רעיונות לסרטונים הבאים בערוץ."
+        async with self._asking:
+            try:
+                reply = await assistant.ask(
+                    ideas_system(context, 5), [{"role": "user", "content": prompt}], effort="medium"
+                )
+            except AssistantError as error:
+                raise self._ask_error(error) from None
+        return {"ideas": [{"title": idea.title, "why": idea.why} for idea in parse_ideas(reply)]}
+
     # -- reminders (called every ~30 s by the runtime) -------------------------------------
     async def tick(self) -> None:
         now = self.core.now()
@@ -722,6 +864,12 @@ ROUTES: list[tuple[str, re.Pattern[str], str]] = [
         ("POST", r"/api/test-notification", "test_notification"),
         ("POST", r"/api/stats/refresh", "stats_refresh"),
         ("POST", r"/api/drive/backup", "drive_backup"),
+        ("GET", r"/api/assistant", "assistant_get"),
+        ("PUT", r"/api/assistant", "assistant_put"),
+        ("DELETE", r"/api/assistant", "assistant_delete"),
+        ("POST", r"/api/assistant/chat", "assistant_chat"),
+        ("DELETE", r"/api/assistant/chat", "assistant_clear"),
+        ("POST", r"/api/assistant/ideas", "assistant_ideas"),
         ("GET", r"/api/google", "google_get"),
         ("POST", r"/api/google/connect", "google_connect"),
         ("DELETE", r"/api/google", "google_disconnect"),

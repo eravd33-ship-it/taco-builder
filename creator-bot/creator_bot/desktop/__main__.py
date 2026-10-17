@@ -39,6 +39,8 @@ def setup_logging(folder: Path) -> None:
     ]
     if sys.stderr is not None:  # a windowed (no console) build has no stderr
         handlers.append(logging.StreamHandler())
+    for noisy in ("httpx", "httpx2"):  # one INFO line per request is just noise
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s: %(message)s", level=logging.INFO, handlers=handlers)
 
 

@@ -64,7 +64,12 @@ class Runtime:
             await asyncio.sleep(self._tick_seconds)
 
     def request(
-        self, method: str, path: str, query: dict[str, str], body: dict[str, Any], timeout: float = 60
+        self,
+        method: str,
+        path: str,
+        query: dict[str, str],
+        body: dict[str, Any],
+        timeout: float = 130,  # the assistant may think for a while
     ) -> tuple[int, Any]:
         assert self._loop is not None
         future = asyncio.run_coroutine_threadsafe(self.app.handle(method, path, query, body), self._loop)

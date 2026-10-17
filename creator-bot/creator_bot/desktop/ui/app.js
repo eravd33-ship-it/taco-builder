@@ -290,7 +290,7 @@ const views = {
         e.preventDefault();
         act(submit, async () => { await api('POST', '/api/ideas', { text: text.value }); text.value = ''; }, '💡 נשמר!');
       } }, text, submit);
-      root.append(h('div', { class: 'card' }, h('h2', null, '💡 רעיון חדש'), form), list);
+      root.append(h('div', { class: 'card' }, h('h2', null, '💡 רעיון חדש'), form), aiIdeasCard(), list);
 
       const refresh = async () => {
         const { ideas } = await api('GET', '/api/ideas');
@@ -301,6 +301,26 @@ const views = {
       };
       await refresh();
       return refresh;
+    },
+  },
+
+  assistant: {
+    title: 'עוזר',
+    async mount(root) {
+      const box = h('div');
+      root.append(box);
+      const draw = async () => {
+        const a = await api('GET', '/api/assistant');
+        if (!a.configured) {
+          box.replaceChildren(h('div', { class: 'card stack' }, h('h2', null, '🤖 העוזר האישי שלך'),
+            h('p', { class: 'muted' }, 'עוזר בינה מלאכותית שמכיר את הערוץ שלך: מציע רעיונות וכותרות, עוזר לתכנן ועונה על שאלות. כדי להפעיל אותו צריך מפתח API של Anthropic (חד-פעמי):'),
+            assistantKeyForm(draw)));
+          return;
+        }
+        box.replaceChildren(chatUi(a, draw));
+      };
+      await draw();
+      return null;
     },
   },
 
@@ -361,6 +381,7 @@ const views = {
           toggle('autostart', 'הפעלה אוטומטית עם המחשב', 'האפליקציה תיפתח ממוזערת כשנכנסים למחשב, כדי שהתזכורות תמיד יגיעו', s.autostart),
           h('div', null, testBtn)),
         googleCard(),
+        assistantCard(),
         h('div', { class: 'card stack' }, h('h2', null, 'ℹ️ מידע'),
           h('div', { class: 'muted small' }, `גרסה ${s.version}`),
           h('div', { class: 'muted small', dir: 'ltr' }, s.data_dir),
@@ -470,6 +491,139 @@ function googleCard() {
     );
   };
 
+  draw();
+  return box;
+}
+
+/** Asking for the Anthropic API key. Shared by the assistant screen and the settings. */
+function assistantKeyForm(onDone) {
+  const key = h('input', { class: 'field grow', type: 'password', dir: 'ltr', placeholder: 'sk-ant-…', required: true, autocomplete: 'off', 'aria-label': 'מפתח API של Anthropic' });
+  const save = h('button', { class: 'btn primary', type: 'submit' }, 'שמור ובדוק');
+  return h('div', { class: 'stack' },
+    h('ol', { class: 'steps' },
+      h('li', null, 'נכנסים ל-', externalLink('https://console.anthropic.com/settings/keys', 'console.anthropic.com'), ' ויוצרים חשבון.'),
+      h('li', null, 'ב-', externalLink('https://console.anthropic.com/settings/billing', 'Billing'), ' מוסיפים אשראי. התשלום לפי שימוש, וכל תשובה עולה בדרך כלל כמה סנטים.'),
+      h('li', null, 'ב-', externalLink('https://console.anthropic.com/settings/keys', 'API keys'), ' יוצרים מפתח, מעתיקים ומדביקים כאן.')),
+    h('form', { class: 'row', onsubmit: async (e) => {
+      e.preventDefault();
+      save.disabled = true;
+      try {
+        await api('PUT', '/api/assistant', { api_key: key.value });
+        toast('✅ העוזר מוכן');
+        await onDone();
+      } catch (error) {
+        toast(error.message, 'error');
+        save.disabled = false;
+      }
+    } }, key, save),
+    h('p', { class: 'muted small' }, 'מה שאתה כותב לעוזר, ורשימת הסרטונים, הרעיונות ונתוני הערוץ שלך, נשלחים ל-Anthropic כדי שיוכל לענות. שום דבר לא נשלח אם אתה לא משתמש בעוזר.'));
+}
+
+/** The chat: bubbles, a text box, and a few starter questions. Text is only ever inserted as text. */
+function chatUi(a, redraw) {
+  const log = h('div', { class: 'chat-log', role: 'log', 'aria-live': 'polite' });
+  const scroll = () => { log.scrollTop = log.scrollHeight; };
+  const add = (role, text, extra = '') => { const m = h('div', { class: `msg ${role} ${extra}` }, text); log.append(m); scroll(); return m; };
+  const starters = h('div', { class: 'chips' });
+  a.messages.forEach((m) => add(m.role === 'user' ? 'user' : 'bot', m.text));
+
+  const input = h('textarea', { class: 'field grow', rows: 2, maxLength: 4000, placeholder: 'שאל את העוזר…  (Enter לשליחה, Shift+Enter לשורה חדשה)', 'aria-label': 'הודעה לעוזר' });
+  const send = h('button', { class: 'btn primary', type: 'submit' }, 'שלח');
+  let busy = false;
+
+  const submit = async (raw) => {
+    const text = raw.trim();
+    if (!text || busy) return;
+    busy = true; send.disabled = true; input.value = ''; starters.hidden = true;
+    add('user', text);
+    const pending = add('bot', '⏳ חושב…', 'pending');
+    try {
+      const { reply } = await api('POST', '/api/assistant/chat', { message: text });
+      pending.textContent = reply;
+      pending.classList.remove('pending');
+    } catch (error) {
+      pending.textContent = error.message;
+      pending.className = 'msg bot error';
+      input.value = text; // the question was not kept, so it can simply be sent again
+    } finally {
+      busy = false; send.disabled = false; input.focus(); scroll();
+    }
+  };
+
+  ['הצע לי 5 כותרות לסרטון הבא', 'איך אפשר להגדיל את הצפיות בערוץ?', 'תכנן לי שבוע תוכן', 'איך מתחילים סרטון בצורה שתופסת?'].forEach((q) =>
+    starters.append(h('button', { type: 'button', class: 'chip', onclick: () => submit(q) }, q)));
+  starters.hidden = a.messages.length > 0;
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(input.value); } });
+
+  return h('div', null,
+    h('div', { class: 'card stack' },
+      h('div', { class: 'video-head' },
+        h('span', { class: 'muted small' }, `🤖 ${a.model} · מכיר את הסרטונים, הרעיונות והיעדים שלך`),
+        h('button', { class: 'btn sm', onclick: async () => { await api('DELETE', '/api/assistant/chat'); await redraw(); } }, 'שיחה חדשה')),
+      log, starters,
+      h('form', { class: 'row', onsubmit: (e) => { e.preventDefault(); submit(input.value); } }, input, send)));
+}
+
+/** "Suggest ideas" for the ideas screen. Saving one adds it to the list below. */
+function aiIdeasCard() {
+  const box = h('div', { class: 'card stack' });
+  const shown = []; // titles already suggested, so "more ideas" does not repeat them
+
+  const suggestion = (idea) => {
+    const save = h('button', { class: 'btn sm', onclick: async () => {
+      save.disabled = true;
+      try {
+        await api('POST', '/api/ideas', { text: idea.title });
+        save.textContent = '✔ נשמר';
+        toast('💡 נשמר ברשימת הרעיונות');
+        await refreshCurrent();
+      } catch (error) { toast(error.message, 'error'); save.disabled = false; }
+    } }, '💡 שמור');
+    return h('div', { class: 'item' },
+      h('div', { class: 'grow' }, h('div', { class: 'task-title' }, idea.title), idea.why ? h('div', { class: 'muted small' }, idea.why) : null), save);
+  };
+
+  const draw = async () => {
+    let a;
+    try { a = await api('GET', '/api/assistant'); } catch { return; }
+    if (!a.configured) {
+      box.replaceChildren(h('h2', null, '🤖 רעיונות מהעוזר'),
+        h('div', { class: 'row' }, h('span', { class: 'grow muted' }, 'עוזר בינה מלאכותית שמציע רעיונות שמתאימים לערוץ שלך.'),
+          h('button', { class: 'btn', onclick: () => show('assistant') }, 'להפעלת העוזר')));
+      return;
+    }
+    const topic = h('input', { class: 'field grow', placeholder: 'נושא (לא חובה), למשל: עריכה בטלפון', maxLength: 300, 'aria-label': 'נושא לרעיונות' });
+    const results = h('div', { class: 'stack' });
+    const go = h('button', { class: 'btn primary', type: 'submit' }, '✨ הצע רעיונות');
+    box.replaceChildren(h('h2', null, '🤖 רעיונות מהעוזר'),
+      h('form', { class: 'row', onsubmit: async (e) => {
+        e.preventDefault();
+        go.disabled = true; go.textContent = '⏳ חושב…';
+        try {
+          const { ideas } = await api('POST', '/api/assistant/ideas', { topic: topic.value, avoid: shown.slice(-30) });
+          shown.push(...ideas.map((i) => i.title));
+          results.replaceChildren(...ideas.map(suggestion));
+        } catch (error) { toast(error.message, 'error'); }
+        go.disabled = false; go.textContent = shown.length ? '✨ עוד רעיונות' : '✨ הצע רעיונות';
+      } }, topic, go), results);
+  };
+  draw();
+  return box;
+}
+
+/** The assistant's settings: whether it has a key, and removing it. */
+function assistantCard() {
+  const box = h('div', { class: 'card stack' });
+  const draw = async () => {
+    let a;
+    try { a = await api('GET', '/api/assistant'); } catch (error) { box.replaceChildren(h('h2', null, '🤖 עוזר בינה מלאכותית'), h('p', { class: 'muted' }, error.message)); return; }
+    box.replaceChildren(h('h2', null, '🤖 עוזר בינה מלאכותית'),
+      h('div', { class: 'row' }, h('span', { class: 'grow' }, `מודל: ${a.model}`), h('span', { class: `badge ${a.configured ? 'ok' : 'warn'}` }, a.configured ? 'מוכן' : 'לא מוגדר')),
+      a.configured
+        ? h('div', { class: 'row' }, h('span', { class: 'muted small grow' }, `מפתח ${a.key_hint}${a.source === 'env' ? ' (מקובץ ‎.env)' : ''}`),
+            a.source === 'app' ? twoStep('הסר מפתח', 'להסיר?', async () => { await api('DELETE', '/api/assistant'); await draw(); }) : null)
+        : assistantKeyForm(draw));
+  };
   draw();
   return box;
 }
