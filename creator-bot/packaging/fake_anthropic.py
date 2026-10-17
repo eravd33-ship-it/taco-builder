@@ -1,7 +1,8 @@
-"""A tiny stand-in for api.anthropic.com, for tests. Stdlib only.
+"""A tiny stand-in for api.anthropic.com (and, under /v1beta, for Google's Gemini API), for tests. Stdlib only.
 
-It records every request exactly as the real SDK sent it and answers like the real API would, so a test can run
-the real `anthropic` client (pointed here with ANTHROPIC_BASE_URL) without a key, a network or any cost.
+It records every request exactly as the client sent it and answers like the real API would, so a test can run the
+real `anthropic` client (pointed here with ANTHROPIC_BASE_URL) or the Gemini one (GEMINI_BASE_URL=<url>/v1beta)
+without a key, a network or any cost.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
 SMOKE_KEY = "sk-ant-smoke-test-key-000000"
+GEMINI_SMOKE_KEY = "AIzaSmokeTestKey0000000000000000"
 SMOKE_REPLY = "תשובת בדיקה מהשרת המדומה"
 
 
@@ -33,6 +35,33 @@ class FakeAnthropic:
                 self.end_headers()
                 self.wfile.write(payload)
 
+            def _gemini(self, body: dict[str, Any] | None) -> None:
+                if self.headers.get("x-goog-api-key") != GEMINI_SMOKE_KEY:
+                    return self._answer(400, {"error": {"status": "INVALID_ARGUMENT", "message": "API key not valid."}})
+                path = self.path.split("?")[0]
+                if self.command == "GET" and path == "/v1beta/models":
+                    return self._answer(
+                        200,
+                        {
+                            "models": [
+                                {
+                                    "name": "models/gemini-flash-latest",
+                                    "supportedGenerationMethods": ["generateContent"],
+                                }
+                            ]
+                        },
+                    )
+                if self.command == "POST" and path.endswith(":generateContent"):
+                    return self._answer(
+                        200,
+                        {
+                            "candidates": [
+                                {"content": {"role": "model", "parts": [{"text": fake.reply}]}, "finishReason": "STOP"}
+                            ]
+                        },
+                    )
+                self._answer(404, {"error": {"status": "NOT_FOUND", "message": "not found"}})
+
             def _handle(self) -> None:
                 length = int(self.headers.get("Content-Length") or 0)
                 body = json.loads(self.rfile.read(length)) if length else None
@@ -44,6 +73,8 @@ class FakeAnthropic:
                         "body": body,
                     }
                 )
+                if self.path.startswith("/v1beta/"):
+                    return self._gemini(body)
                 if self.headers.get("x-api-key") != fake.valid_key:
                     return self._answer(
                         401,

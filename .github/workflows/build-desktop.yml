@@ -58,9 +58,10 @@ jobs:
       - name: Check that the built app starts (Windows)
         if: runner.os == 'Windows'
         env:
-          # lets the smoke test check the AI assistant inside the built app against a fake API
+          # lets the smoke test check the AI assistants inside the built app against a fake API
           ANTHROPIC_BASE_URL: http://127.0.0.1:8798
           ANTHROPIC_API_KEY: sk-ant-smoke-test-key-000000
+          GEMINI_BASE_URL: http://127.0.0.1:8798/v1beta
         run: |
           "dist/Creator Desk/Creator Desk.exe" --no-window --port 8799 &
           python packaging/smoke_test.py 8799 8798
@@ -68,9 +69,10 @@ jobs:
       - name: Check that the built app starts (macOS)
         if: runner.os == 'macOS'
         env:
-          # lets the smoke test check the AI assistant inside the built app against a fake API
+          # lets the smoke test check the AI assistants inside the built app against a fake API
           ANTHROPIC_BASE_URL: http://127.0.0.1:8798
           ANTHROPIC_API_KEY: sk-ant-smoke-test-key-000000
+          GEMINI_BASE_URL: http://127.0.0.1:8798/v1beta
         run: |
           "dist/Creator Desk.app/Contents/MacOS/Creator Desk" --no-window --port 8799 &
           python packaging/smoke_test.py 8799 8798

@@ -1,6 +1,6 @@
 [project]
 name = "creator-bot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Telegram assistant for running a YouTube channel: reminders, motivation, ideas, Drive"
 requires-python = ">=3.10"
 

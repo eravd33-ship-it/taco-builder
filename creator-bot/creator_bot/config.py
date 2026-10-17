@@ -48,7 +48,8 @@ class Settings:
     google_refresh_token: str | None = None
     google_scopes: frozenset[str] = frozenset()  # granted scopes; empty = unknown (e.g. set through .env)
     # AI assistant (optional; the desktop app can also store the key itself)
-    anthropic_api_key: str | None = None
+    anthropic_api_key: str | None = None  # Claude (paid)
+    gemini_api_key: str | None = None  # Gemini (free key from Google AI Studio)
 
     @classmethod
     def from_env(cls, require_token: bool = True) -> Settings:
@@ -77,4 +78,5 @@ class Settings:
             google_client_secret=env("GOOGLE_CLIENT_SECRET") or None,
             google_refresh_token=env("GOOGLE_REFRESH_TOKEN") or None,
             anthropic_api_key=env("ANTHROPIC_API_KEY") or None,
+            gemini_api_key=env("GEMINI_API_KEY") or None,
         )

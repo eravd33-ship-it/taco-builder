@@ -5,7 +5,8 @@ It waits for the app, checks the page, the files and the API, then asks the app 
 
 With FAKE_PORT it also checks the AI assistant end to end inside the built app: it starts a fake Anthropic API on that
 port, and the app must have been launched with ANTHROPIC_BASE_URL=http://127.0.0.1:FAKE_PORT and
-ANTHROPIC_API_KEY=sk-ant-smoke-test-key-000000. The real SDK inside the app then talks to the fake.
+ANTHROPIC_API_KEY=sk-ant-smoke-test-key-000000 (and GEMINI_BASE_URL=http://127.0.0.1:FAKE_PORT/v1beta for the free
+Gemini assistant). The real SDK / HTTP client inside the app then talks to the fake.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fake_anthropic import SMOKE_REPLY, FakeAnthropic  # noqa: E402
+from fake_anthropic import GEMINI_SMOKE_KEY, SMOKE_REPLY, FakeAnthropic  # noqa: E402
 
 
 def main(port: int, fake_port: int | None = None) -> int:
@@ -63,6 +64,14 @@ def main(port: int, fake_port: int | None = None) -> int:
         assert sent and sent[0]["body"]["model"] == "claude-opus-5-5", "the assistant did not reach the (fake) API"
         assert sent[0]["body"]["fallbacks"] == "default", "the request is missing the refusal fallback"
         print("Assistant OK")
+        # The free assistant: a key typed into the app, checked and used against the fake Gemini API.
+        saved = call("PUT", "/api/assistant", {"provider": "gemini", "api_key": GEMINI_SMOKE_KEY})
+        assert saved["provider"] == "gemini" and saved["configured"], f"the Gemini key was not accepted: {saved}"
+        assert call("POST", "/api/assistant/chat", {"message": "שלום"})["reply"] == SMOKE_REPLY, "wrong Gemini reply"
+        generated = [r for r in fake.requests if r["path"].endswith(":generateContent")]
+        assert generated and generated[0]["headers"]["x-goog-api-key"] == GEMINI_SMOKE_KEY, "Gemini was not reached"
+        assert GEMINI_SMOKE_KEY not in generated[0]["path"], "the key must travel in a header, not in the URL"
+        print("Gemini OK")
     call("POST", "/api/quit")
     print("Smoke test OK")
     return 0

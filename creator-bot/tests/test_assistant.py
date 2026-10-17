@@ -143,7 +143,8 @@ def test_ideas_are_parsed_leniently():
 # -- the desktop endpoints --------------------------------------------------------------------------
 async def test_nothing_works_without_a_key(desk):
     status = await desk.ok("GET", "/api/assistant")
-    assert (status["configured"], status["messages"], status["model"]) == (False, [], "Claude Opus 5.5")
+    assert (status["configured"], status["messages"]) == (False, [])
+    assert status["provider"] == "gemini" and status["model"] == "Gemini (חינם)"  # the free assistant is offered first
     assert (await desk.call("POST", "/api/assistant/chat", {"message": "היי"}))[0] == 409
     assert (await desk.call("POST", "/api/assistant/ideas", {}))[0] == 409
 

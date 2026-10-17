@@ -30,6 +30,8 @@ from ..assistant import KEY_PREFIX, MODEL_LABEL, Assistant, AssistantError, chat
 from ..config import Settings
 from ..core import ui
 from ..core.app import Core
+from ..gemini import MIN_KEY_LENGTH as GEMINI_MIN_KEY
+from ..gemini import GeminiAssistant
 from ..google_auth import CLIENT_ID_SUFFIX, YOUTUBE_SCOPE, build_auth_url, exchange_code, make_pkce
 from ..modules import ALL_MODULES
 from ..modules.drive import DriveModule
@@ -54,9 +56,16 @@ OPEN_HOSTS = {
     "accounts.google.com",
     "myaccount.google.com",
     "console.anthropic.com",  # getting an API key for the assistant
+    "aistudio.google.com",  # the free Gemini key
 }
 SIGN_IN_VALID_FOR = timedelta(minutes=10)
 CHAT_LIMIT = 30  # messages kept and sent to the assistant
+# The two assistants a person can use. The free one is listed (and offered) first.
+PROVIDERS = {
+    "gemini": {"label": GeminiAssistant.label, "free": True},
+    "claude": {"label": MODEL_LABEL, "free": False},
+}
+KEY_SETTING = {"gemini": "assistant.gemini_key", "claude": "assistant.api_key"}  # "claude" kept for old installs
 HTTP_FOR_KIND = {"key": 400, "billing": 402, "rate": 429, "refusal": 422, "connection": 502, "server": 502}
 WINDOW_ACTIVE_FOR = timedelta(seconds=45)  # how long a "window is in front" heartbeat counts
 RETRY_AFTER = timedelta(minutes=30)
@@ -95,6 +104,7 @@ class DesktopApp:
         autostart: Autostart | None = None,
         open_url: Callable[[str], Any] = webbrowser.open,
         assistant_factory: Callable[[str], Assistant] = Assistant,
+        gemini_factory: Callable[[str], GeminiAssistant] = GeminiAssistant,
     ) -> None:
         self._env_settings = settings  # what the environment / .env says
         self.db = db
@@ -102,9 +112,10 @@ class DesktopApp:
         self.port: int | None = None  # set once the local server is listening (the sign-in redirects back to it)
         self.google_transport: Any = None  # tests replace the network
         self._pending_sign_in: tuple[str, str, datetime] | None = None  # (state, verifier, expires)
-        self._assistant_factory = assistant_factory
-        self._assistant: Assistant | None = None
-        self._assistant_key: str | None = None
+        self._assistant_factory = assistant_factory  # Claude
+        self._gemini_factory = gemini_factory
+        self._assistant: Assistant | GeminiAssistant | None = None
+        self._assistant_key: tuple[str, str] | None = None  # (provider, key) of the cached assistant
         self._chat: list[dict[str, str]] = []  # the conversation, kept while the app runs
         self._asking = asyncio.Lock()
         self.feed = Feed()
@@ -654,21 +665,35 @@ class DesktopApp:
         return await self.google_get(req)
 
     # -- AI assistant ---------------------------------------------------------------------------
-    def _assistant_key_info(self) -> tuple[str | None, str | None]:
-        """(key, where it came from): a key saved in the app wins over the environment's."""
-        saved = self.db.get("assistant.api_key")
+    def _provider_key(self, provider: str) -> tuple[str | None, str | None]:
+        """(key, where it came from) for one provider: a key saved in the app wins over the environment's."""
+        saved = self.db.get(KEY_SETTING[provider])
         if saved:
             return saved, "app"
-        if self._env_settings.anthropic_api_key:
-            return self._env_settings.anthropic_api_key, "env"
-        return None, None
+        env_key = self._env_settings.gemini_api_key if provider == "gemini" else self._env_settings.anthropic_api_key
+        return (env_key, "env") if env_key else (None, None)
 
-    def _get_assistant(self) -> Assistant:
-        key, _ = self._assistant_key_info()
+    def _active_provider(self) -> str:
+        """The assistant in use: the one chosen last, if it still has a key, otherwise any that has one."""
+        chosen = self.db.get("assistant.provider")
+        order = ([chosen] if chosen in PROVIDERS else []) + list(PROVIDERS)
+        return next(
+            (name for name in order if self._provider_key(name)[0]), chosen if chosen in PROVIDERS else "gemini"
+        )
+
+    def _assistant_key_info(self) -> tuple[str | None, str | None]:
+        return self._provider_key(self._active_provider())
+
+    def _make_assistant(self, provider: str, key: str) -> Assistant | GeminiAssistant:
+        return self._gemini_factory(key) if provider == "gemini" else self._assistant_factory(key)
+
+    def _get_assistant(self) -> Assistant | GeminiAssistant:
+        provider = self._active_provider()
+        key, _ = self._provider_key(provider)
         if not key:
-            raise ApiError(409, "צריך קודם להזין מפתח API של Anthropic (בהגדרות או במסך העוזר).")
-        if self._assistant is None or key != self._assistant_key:
-            self._assistant, self._assistant_key = self._assistant_factory(key), key
+            raise ApiError(409, "צריך קודם להפעיל את העוזר: להזין מפתח API (בהגדרות או במסך העוזר).")
+        if self._assistant is None or (provider, key) != self._assistant_key:
+            self._assistant, self._assistant_key = self._make_assistant(provider, key), (provider, key)
         return self._assistant
 
     @staticmethod
@@ -710,32 +735,50 @@ class DesktopApp:
         return "\n".join(lines)
 
     async def assistant_get(self, req: Request) -> dict[str, Any]:
-        key, source = self._assistant_key_info()
+        provider = self._active_provider()
+        key, source = self._provider_key(provider)
         return {
             "configured": bool(key),
+            "provider": provider,
             "source": source,
             "key_hint": f"…{key[-4:]}" if key else None,
-            "model": MODEL_LABEL,
+            "model": PROVIDERS[provider]["label"],
+            "providers": [
+                {
+                    "id": name,
+                    "label": info["label"],
+                    "free": info["free"],
+                    "configured": bool(self._provider_key(name)[0]),
+                }
+                for name, info in PROVIDERS.items()
+            ],
             "messages": [{"role": m["role"], "text": m["content"]} for m in self._chat],
             "busy": self._asking.locked(),
         }
 
     async def assistant_put(self, req: Request) -> dict[str, Any]:
+        provider = str(req.body.get("provider") or "claude")
+        if provider not in PROVIDERS:
+            raise ApiError(400, "ספק לא מוכר")
         key = str(req.body.get("api_key") or "").strip()
-        if not key.startswith(KEY_PREFIX) or len(key) < 20:
+        if provider == "claude" and not (key.startswith(KEY_PREFIX) and len(key) >= 20):
             raise ApiError(400, f"מפתח ה-API אמור להתחיל ב-{KEY_PREFIX}")
+        if provider == "gemini" and (len(key) < GEMINI_MIN_KEY or any(ch.isspace() for ch in key)):
+            raise ApiError(400, "המפתח נראה קצר או לא תקין. כדאי להעתיק אותו שוב מ-Google AI Studio.")
         try:
-            await self._assistant_factory(key).check_key()  # nothing is saved unless the key really works
+            await self._make_assistant(provider, key).check_key()  # nothing is saved unless the key really works
         except AssistantError as error:
             raise self._ask_error(error) from None
-        self.db.set("assistant.api_key", key)
+        self.db.set(KEY_SETTING[provider], key)
+        self.db.set("assistant.provider", provider)
         self._assistant = None
         return await self.assistant_get(req)
 
     async def assistant_delete(self, req: Request) -> dict[str, Any]:
-        if self._assistant_key_info()[1] == "env":
+        provider = self._active_provider()
+        if self._provider_key(provider)[1] == "env":
             raise ApiError(409, "המפתח מוגדר דרך קובץ .env")
-        self.db.set("assistant.api_key", None)
+        self.db.set(KEY_SETTING[provider], None)
         self._assistant = None
         self._chat.clear()
         return await self.assistant_get(req)

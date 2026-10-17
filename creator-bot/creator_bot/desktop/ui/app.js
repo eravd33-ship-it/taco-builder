@@ -313,7 +313,7 @@ const views = {
         const a = await api('GET', '/api/assistant');
         if (!a.configured) {
           box.replaceChildren(h('div', { class: 'card stack' }, h('h2', null, '🤖 העוזר האישי שלך'),
-            h('p', { class: 'muted' }, 'עוזר בינה מלאכותית שמכיר את הערוץ שלך: מציע רעיונות וכותרות, עוזר לתכנן ועונה על שאלות. כדי להפעיל אותו צריך מפתח API של Anthropic (חד-פעמי):'),
+            h('p', { class: 'muted' }, 'עוזר בינה מלאכותית שמכיר את הערוץ שלך: מציע רעיונות וכותרות, עוזר לתכנן ועונה על שאלות. כדי להפעיל אותו צריך מפתח (חד-פעמי). אפשר לקבל מפתח חינם:'),
             assistantKeyForm(draw)));
           return;
         }
@@ -495,28 +495,54 @@ function googleCard() {
   return box;
 }
 
-/** Asking for the Anthropic API key. Shared by the assistant screen and the settings. */
-function assistantKeyForm(onDone) {
-  const key = h('input', { class: 'field grow', type: 'password', dir: 'ltr', placeholder: 'sk-ant-…', required: true, autocomplete: 'off', 'aria-label': 'מפתח API של Anthropic' });
-  const save = h('button', { class: 'btn primary', type: 'submit' }, 'שמור ובדוק');
-  return h('div', { class: 'stack' },
-    h('ol', { class: 'steps' },
+/** Asking for an assistant's API key: free Gemini (offered first) or paid Claude. Shared by the assistant screen and the settings. */
+const ASSISTANTS = {
+  gemini: {
+    tab: '🆓 Gemini (חינם)', placeholder: 'AIza…', aria: 'מפתח API של Gemini',
+    steps: () => [
+      h('li', null, 'נכנסים ל-', externalLink('https://aistudio.google.com/apikey', 'aistudio.google.com/apikey'), ' עם חשבון הגוגל שלך.'),
+      h('li', null, 'לוחצים ', h('b', null, 'Create API key'), ' (אם מבקשים לבחור פרויקט, אפשר ליצור חדש). בלי כרטיס אשראי.'),
+      h('li', null, 'מעתיקים את המפתח ומדביקים כאן.')],
+    note: 'המפתח חינמי, עם מגבלת שימוש יומית (לרוב מספיקה בהחלט). בשירות החינמי גוגל עשויה להשתמש במה שנשלח אליה כדי לשפר את המוצרים שלה, ולכן כדאי לא לכתוב לעוזר מידע פרטי. מה שאתה כותב לעוזר, ורשימת הסרטונים, הרעיונות ונתוני הערוץ, נשלחים לגוגל כדי שיוכל לענות. שום דבר לא נשלח אם אתה לא משתמש בעוזר.',
+  },
+  claude: {
+    tab: 'Claude (בתשלום)', placeholder: 'sk-ant-…', aria: 'מפתח API של Anthropic',
+    steps: () => [
       h('li', null, 'נכנסים ל-', externalLink('https://console.anthropic.com/settings/keys', 'console.anthropic.com'), ' ויוצרים חשבון.'),
       h('li', null, 'ב-', externalLink('https://console.anthropic.com/settings/billing', 'Billing'), ' מוסיפים אשראי. התשלום לפי שימוש, וכל תשובה עולה בדרך כלל כמה סנטים.'),
-      h('li', null, 'ב-', externalLink('https://console.anthropic.com/settings/keys', 'API keys'), ' יוצרים מפתח, מעתיקים ומדביקים כאן.')),
-    h('form', { class: 'row', onsubmit: async (e) => {
-      e.preventDefault();
-      save.disabled = true;
-      try {
-        await api('PUT', '/api/assistant', { api_key: key.value });
-        toast('✅ העוזר מוכן');
-        await onDone();
-      } catch (error) {
-        toast(error.message, 'error');
-        save.disabled = false;
-      }
-    } }, key, save),
-    h('p', { class: 'muted small' }, 'מה שאתה כותב לעוזר, ורשימת הסרטונים, הרעיונות ונתוני הערוץ שלך, נשלחים ל-Anthropic כדי שיוכל לענות. שום דבר לא נשלח אם אתה לא משתמש בעוזר.'));
+      h('li', null, 'ב-', externalLink('https://console.anthropic.com/settings/keys', 'API keys'), ' יוצרים מפתח, מעתיקים ומדביקים כאן.')],
+    note: 'ההבדל: Claude מדויק יותר בעברית, אבל עולה כסף לפי שימוש. מה שאתה כותב לעוזר, ורשימת הסרטונים, הרעיונות ונתוני הערוץ, נשלחים ל-Anthropic כדי שיוכל לענות. שום דבר לא נשלח אם אתה לא משתמש בעוזר.',
+  },
+};
+
+function assistantKeyForm(onDone) {
+  const body = h('div', { class: 'stack' });
+  const tabs = h('div', { class: 'chips', role: 'group', 'aria-label': 'איזה עוזר' });
+  const choose = (provider) => {
+    const info = ASSISTANTS[provider];
+    const key = h('input', { class: 'field grow', type: 'password', dir: 'ltr', placeholder: info.placeholder, required: true, autocomplete: 'off', 'aria-label': info.aria });
+    const save = h('button', { class: 'btn primary', type: 'submit' }, 'שמור ובדוק');
+    [...tabs.children].forEach((tab) => tab.setAttribute('aria-pressed', String(tab.dataset.provider === provider)));
+    body.replaceChildren(
+      h('ol', { class: 'steps' }, ...info.steps()),
+      h('form', { class: 'row', onsubmit: async (e) => {
+        e.preventDefault();
+        save.disabled = true;
+        try {
+          await api('PUT', '/api/assistant', { provider, api_key: key.value });
+          toast('✅ העוזר מוכן');
+          await onDone();
+        } catch (error) {
+          toast(error.message, 'error');
+          save.disabled = false;
+        }
+      } }, key, save),
+      h('p', { class: 'muted small' }, info.note));
+  };
+  Object.entries(ASSISTANTS).forEach(([provider, info]) =>
+    tabs.append(h('button', { type: 'button', class: 'chip', 'data-provider': provider, 'aria-pressed': 'false', onclick: () => choose(provider) }, info.tab)));
+  choose('gemini');
+  return h('div', { class: 'stack' }, tabs, body);
 }
 
 /** The chat: bubbles, a text box, and a few starter questions. Text is only ever inserted as text. */
@@ -611,17 +637,19 @@ function aiIdeasCard() {
   return box;
 }
 
-/** The assistant's settings: whether it has a key, and removing it. */
+/** The assistant's settings: which one is on, removing its key, and adding the other one. */
 function assistantCard() {
   const box = h('div', { class: 'card stack' });
   const draw = async () => {
     let a;
     try { a = await api('GET', '/api/assistant'); } catch (error) { box.replaceChildren(h('h2', null, '🤖 עוזר בינה מלאכותית'), h('p', { class: 'muted' }, error.message)); return; }
     box.replaceChildren(h('h2', null, '🤖 עוזר בינה מלאכותית'),
-      h('div', { class: 'row' }, h('span', { class: 'grow' }, `מודל: ${a.model}`), h('span', { class: `badge ${a.configured ? 'ok' : 'warn'}` }, a.configured ? 'מוכן' : 'לא מוגדר')),
+      h('div', { class: 'row' }, h('span', { class: 'grow' }, `עוזר: ${a.model}`), h('span', { class: `badge ${a.configured ? 'ok' : 'warn'}` }, a.configured ? 'מוכן' : 'לא מוגדר')),
       a.configured
-        ? h('div', { class: 'row' }, h('span', { class: 'muted small grow' }, `מפתח ${a.key_hint}${a.source === 'env' ? ' (מקובץ ‎.env)' : ''}`),
-            a.source === 'app' ? twoStep('הסר מפתח', 'להסיר?', async () => { await api('DELETE', '/api/assistant'); await draw(); }) : null)
+        ? h('div', { class: 'stack' },
+            h('div', { class: 'row' }, h('span', { class: 'muted small grow' }, `מפתח ${a.key_hint}${a.source === 'env' ? ' (מקובץ ‎.env)' : ''}`),
+              a.source === 'app' ? twoStep('הסר מפתח', 'להסיר?', async () => { await api('DELETE', '/api/assistant'); await draw(); }) : null),
+            h('details', null, h('summary', null, 'החלפת עוזר או מפתח'), assistantKeyForm(draw)))
         : assistantKeyForm(draw));
   };
   draw();
