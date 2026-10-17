@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="token" content="__TOKEN__">
+  <title>Creator Desk</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img class="logo" src="/icon.png" alt="" width="36" height="36"><span>Creator Desk</span></div>
+      <nav id="nav" aria-label="ניווט ראשי">
+        <button data-view="today"><span aria-hidden="true">📋</span><span>היום</span></button>
+        <button data-view="videos"><span aria-hidden="true">🎬</span><span>סרטונים</span></button>
+        <button data-view="routines"><span aria-hidden="true">🔁</span><span>קבועות</span></button>
+        <button data-view="ideas"><span aria-hidden="true">💡</span><span>רעיונות</span></button>
+        <button data-view="assistant"><span aria-hidden="true">🤖</span><span>עוזר</span></button>
+        <button data-view="goals"><span aria-hidden="true">🎯</span><span>יעדים</span></button>
+        <button data-view="settings"><span aria-hidden="true">⚙️</span><span>הגדרות</span></button>
+      </nav>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <h1 id="title"></h1>
+        <button id="bell" class="icon-btn" aria-label="התראות" aria-expanded="false">
+          <span aria-hidden="true">🔔</span><span id="badge" class="badge-dot" hidden></span>
+        </button>
+      </header>
+      <div id="inbox" class="inbox" hidden></div>
+      <section id="view" aria-live="polite"></section>
+    </main>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

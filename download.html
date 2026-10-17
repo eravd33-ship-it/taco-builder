@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>הורדה – Creator Desk</title>
+  <meta name="description" content="הורדת Creator Desk ל-Windows ול-Mac, והוראות התקנה קצרות.">
+  <meta name="theme-color" content="#d92d20">
+  <link rel="icon" href="assets/img/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/icon.png">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">דילוג לתוכן</a>
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="index.html"><img src="assets/img/icon.png" alt="" width="36" height="36"><span>Creator Desk</span></a>
+    <nav class="nav" aria-label="ראשי">
+      <a href="index.html">בית</a>
+      <a href="guide.html">מדריך</a>
+      <a class="btn small" href="download.html">הורדה</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>הורדה</h1>
+    <p>ל-<bdi>Windows</bdi> ול-<bdi>Mac</bdi>. האפליקציה חינמית ולא דורשת הרשמה.</p>
+  </div>
+
+  <div data-release hidden>
+    <p><b data-release-version>הגרסה האחרונה</b> מוכנה להורדה:</p>
+    <div class="btn-row" data-release-buttons></div>
+  </div>
+
+  <div data-release-fallback class="prose">
+    <h2 style="margin-top:36px">איך מורידים</h2>
+    <p>האפליקציה נבנית אוטומטית ב-GitHub, בנפרד לכל מערכת הפעלה:</p>
+    <ol>
+      <li>פותחים את <a href="https://github.com/eravd33-ship-it/taco-builder/actions/workflows/build-desktop.yml">דף הבניות ב-GitHub</a> (צריך להיות מחובר לחשבון) ולוחצים על הריצה האחרונה עם סימן ✅.</li>
+      <li>גוללים לתחתית הדף, לחלק <b><bdi>Artifacts</bdi></b>, ומורידים את <code>Creator-Desk-Windows</code> או את <code>Creator-Desk-macOS</code>.</li>
+    </ol>
+    <div class="btn-row"><a class="btn" href="https://github.com/eravd33-ship-it/taco-builder/actions/workflows/build-desktop.yml">לדף ההורדות ב-GitHub</a></div>
+  </div>
+
+  <h2 style="margin-top:48px;font-size:28px">הוראות לפי מערכת</h2>
+  <div class="os">
+    <article class="card" data-os="windows">
+      <h3>🪟 <bdi>Windows</bdi></h3>
+      <ol>
+        <li>מחלצים את קובץ ה-<bdi>zip</bdi>: קליק ימני ואז <b><bdi>Extract All</bdi></b>.</li>
+        <li>פותחים את <code>Creator Desk.exe</code> מהתיקייה שנוצרה.</li>
+        <li>אם מופיעה האזהרה <bdi>Windows protected your PC</bdi>: לוחצים <b><bdi>More info</bdi></b> ואז <b><bdi>Run anyway</bdi></b>. זה קורה כי האפליקציה עוד לא חתומה.</li>
+      </ol>
+    </article>
+    <article class="card" data-os="mac">
+      <h3>🍎 <bdi>Mac</bdi></h3>
+      <ol>
+        <li>מחלצים את ה-<bdi>zip</bdi> בלחיצה כפולה עליו.</li>
+        <li>קליק ימני על <code>Creator Desk</code>, ואז <b><bdi>Open</bdi></b>, ושוב <b><bdi>Open</bdi></b> בחלון האזהרה.</li>
+      </ol>
+    </article>
+    <article class="card" data-os="source">
+      <h3>🐧 מהקוד</h3>
+      <ol>
+        <li>צריך <a href="https://www.python.org/downloads/"><bdi>Python</bdi> 3.10</a> ומעלה.</li>
+        <li>מורידים את <a href="https://github.com/eravd33-ship-it/taco-builder">הריפו</a> ונכנסים לתיקייה <code>creator-bot</code>.</li>
+        <li><bdi>Windows</bdi>: לחיצה כפולה על <code>Creator Desk.bat</code>. <bdi>Mac</bdi>: <code>Creator Desk.command</code>. <bdi>Linux</bdi>: <code>./creator-desk.sh</code>.</li>
+      </ol>
+    </article>
+  </div>
+
+  <div class="prose" style="padding-bottom:40px">
+    <h2 style="margin-top:20px">כדאי לדעת</h2>
+    <ul>
+      <li><b>עדכון:</b> מורידים את הגרסה החדשה ומחליפים את הישנה. הסרטונים והיעדים שלך נשמרים בנפרד, בתיקיית המשתמש.</li>
+      <li><b>אזהרות אבטחה:</b> האפליקציה עוד לא חתומה דיגיטלית, ולכן <bdi>Windows</bdi> ו-<bdi>Mac</bdi> מציגים אזהרה בפעם הראשונה. הקוד פתוח לעיון ב-<a href="https://github.com/eravd33-ship-it/taco-builder">GitHub</a>.</li>
+      <li><b>אם החלון לא נפתח:</b> האפליקציה נפתחת בדפדפן. זה אותו ממשק ואותן יכולות.</li>
+      <li>המדריך המלא נמצא <a href="guide.html">כאן</a>.</li>
+    </ul>
+  </div>
+</div>
+
+</main>
+<footer class="site-footer">
+  <div class="wrap foot">
+    <div>
+      <b>Creator Desk</b>
+      העוזר האישי לערוץ היוטיוב שלך.<br>הנתונים נשארים אצלך במחשב.
+    </div>
+    <div>
+      <b>באתר</b>
+      <ul>
+        <li><a href="index.html">בית</a></li>
+        <li><a href="guide.html">מדריך</a></li>
+        <li><a href="download.html">הורדה</a></li>
+      </ul>
+    </div>
+    <div>
+      <b>עוד</b>
+      <ul>
+        <li><a href="https://github.com/eravd33-ship-it/taco-builder">הקוד ב-GitHub</a></li>
+        <li><a href="guide.html#telegram">בוט טלגרם</a></li>
+        <li><a href="taco.html">בנה את הטאקו שלך 🌮</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

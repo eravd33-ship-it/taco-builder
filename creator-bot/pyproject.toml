@@ -1,0 +1,20 @@
+[project]
+name = "creator-bot"
+version = "0.1.0"
+description = "Telegram assistant for running a YouTube channel: reminders, motivation, ideas, Drive"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"packaging/make_site_screenshots.py" = ["E501"]  # the embedded HTML has long lines

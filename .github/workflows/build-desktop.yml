@@ -1,0 +1,92 @@
+name: Build desktop app
+
+# Builds a ready-to-run Creator Desk for Windows and macOS, so nobody needs Python.
+# Download the result from the run's page: Actions -> this workflow -> a run -> Artifacts.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "creator-bot/**"
+      - ".github/workflows/build-desktop.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows
+          - os: macos-latest
+            name: macOS
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: creator-bot
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt -r requirements-window.txt pyinstaller
+
+      - name: Tests
+        run: python -m pytest -q
+
+      - name: Build the app
+        run: python build_desktop.py
+
+      - name: Check that the built app starts (Windows)
+        if: runner.os == 'Windows'
+        env:
+          # lets the smoke test check the AI assistant inside the built app against a fake API
+          ANTHROPIC_BASE_URL: http://127.0.0.1:8798
+          ANTHROPIC_API_KEY: sk-ant-smoke-test-key-000000
+        run: |
+          "dist/Creator Desk/Creator Desk.exe" --no-window --port 8799 &
+          python packaging/smoke_test.py 8799 8798
+
+      - name: Check that the built app starts (macOS)
+        if: runner.os == 'macOS'
+        env:
+          # lets the smoke test check the AI assistant inside the built app against a fake API
+          ANTHROPIC_BASE_URL: http://127.0.0.1:8798
+          ANTHROPIC_API_KEY: sk-ant-smoke-test-key-000000
+        run: |
+          "dist/Creator Desk.app/Contents/MacOS/Creator Desk" --no-window --port 8799 &
+          python packaging/smoke_test.py 8799 8798
+
+      - name: Show the app log if something failed
+        if: failure()
+        run: |
+          cat "$APPDATA/CreatorDesk/creator-desk.log" 2>/dev/null || true
+          cat "$HOME/Library/Application Support/CreatorDesk/creator-desk.log" 2>/dev/null || true
+
+      - name: Zip (macOS)
+        if: runner.os == 'macOS'
+        run: ditto -c -k --keepParent "dist/Creator Desk.app" "Creator-Desk-macOS.zip"
+
+      - name: Upload (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Creator-Desk-Windows
+          path: creator-bot/dist/Creator Desk
+          if-no-files-found: error
+
+      - name: Upload (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Creator-Desk-macOS
+          path: creator-bot/Creator-Desk-macOS.zip
+          if-no-files-found: error
