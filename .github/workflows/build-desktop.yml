@@ -1,9 +1,19 @@
 name: Build desktop app
 
 # Builds a ready-to-run Creator Desk for Windows and macOS, so nobody needs Python.
-# Download the result from the run's page: Actions -> this workflow -> a run -> Artifacts.
+# Every run keeps the result under Actions -> this workflow -> a run -> Artifacts.
+# To publish a version (the site's download buttons pick it up by themselves), either
+# run this workflow by hand with "publish" ticked, or push a tag such as v0.1.0.
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the build as a GitHub Release (tag v<app version>)"
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "v*"
   pull_request:
     paths:
       - "creator-bot/**"
@@ -90,3 +100,53 @@ jobs:
           name: Creator-Desk-macOS
           path: creator-bot/Creator-Desk-macOS.zip
           if-no-files-found: error
+
+  release:
+    name: Publish the release
+    needs: build
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and attach the files
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: Creator-Desk-Windows
+          path: "Creator Desk"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: Creator-Desk-macOS
+          path: mac
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+          IS_TAG: ${{ github.ref_type == 'tag' }}
+        run: |
+          if [ "$IS_TAG" = "true" ]; then
+            TAG="$REF_NAME"
+          else
+            VERSION=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' creator-bot/creator_bot/desktop/__init__.py)
+            TAG="v$VERSION"
+          fi
+          zip -qr Creator-Desk-Windows.zip "Creator Desk"
+          mv mac/Creator-Desk-macOS.zip .
+          cat > notes.md <<'NOTES'
+          אפליקציה חינמית למחשב, בלי הרשמה ובלי Python.
+
+          - Windows: מחלצים את `Creator-Desk-Windows.zip` ופותחים את `Creator Desk.exe`.
+          - Mac: מחלצים את `Creator-Desk-macOS.zip`, לוחצים קליק ימני על `Creator Desk` ואז Open.
+
+          האפליקציה עוד לא חתומה דיגיטלית, ולכן Windows ו-Mac מציגים אזהרה בפעם הראשונה.
+          הוראות מלאות: https://eravd33-ship-it.github.io/taco-builder/download.html
+          NOTES
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" Creator-Desk-Windows.zip Creator-Desk-macOS.zip --clobber
+          else
+            gh release create "$TAG" Creator-Desk-Windows.zip Creator-Desk-macOS.zip \
+              --target "$GITHUB_SHA" --title "Creator Desk $TAG" --notes-file notes.md --latest
+          fi
