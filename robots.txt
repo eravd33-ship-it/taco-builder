@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://eravd33-ship-it.github.io/taco-builder/sitemap.xml

@@ -1,174 +1,156 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌮 בנה טאקו</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creator Desk – העוזר האישי לערוץ היוטיוב שלך</title>
+  <meta name="description" content="אפליקציה למחשב שמתזמנת צילום, עריכה והעלאה, שולחת תזכורות ומעודדת אותך להמשיך ליצור. בלי הרשמה, והנתונים נשארים אצלך.">
+  <meta name="theme-color" content="#d92d20">
+  <link rel="icon" href="assets/img/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/icon.png">
+  <link rel="stylesheet" href="assets/site.css">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="he_IL">
+  <meta property="og:title" content="Creator Desk – העוזר האישי לערוץ היוטיוב שלך">
+  <meta property="og:description" content="מתזמן צילום, עריכה והעלאה, מזכיר בזמן ודוחף אותך להמשיך. אפליקציה למחשב, בלי הרשמה.">
+  <meta property="og:image" content="https://eravd33-ship-it.github.io/taco-builder/assets/img/og.png">
+  <meta property="og:url" content="https://eravd33-ship-it.github.io/taco-builder/">
+  <meta name="twitter:card" content="summary_large_image">
 </head>
-<body class="bg-amber-50 p-4">
+<body>
+<a class="skip" href="#main">דילוג לתוכן</a>
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="index.html"><img src="assets/img/icon.png" alt="" width="36" height="36"><span>Creator Desk</span></a>
+    <nav class="nav" aria-label="ראשי">
+      <a href="index.html" aria-current="page">בית</a>
+      <a href="guide.html">מדריך</a>
+      <a class="btn small" href="download.html">הורדה</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
 
-    <a href="creator-desk.html" class="block max-w-md mx-auto mb-4 bg-red-600 text-white rounded-2xl p-3 text-center font-bold shadow">
-        🎬 אפליקציה לניהול ערוץ יוטיוב – איפה להוריד ואיך להשתמש ←
-    </a>
-
-    <div class="max-w-md mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-6">🌮 בנה את הטאקו שלך</h1>
-
-        <!-- טורטיה -->
-        <div class="bg-white rounded-2xl p-4 mb-4 shadow">
-            <div class="font-bold mb-3">1. בחר טורטיה</div>
-            <div class="grid grid-cols-2 gap-3" id="tortilla"></div>
-        </div>
-
-        <!-- חלבון -->
-        <div class="bg-white rounded-2xl p-4 mb-4 shadow">
-            <div class="font-bold mb-3">2. בחר חלבון</div>
-            <div class="grid grid-cols-2 gap-3" id="protein"></div>
-        </div>
-
-        <!-- תוספות -->
-        <div class="bg-white rounded-2xl p-4 mb-4 shadow">
-            <div class="font-bold mb-3">3. תוספות</div>
-            <div class="flex flex-wrap gap-2" id="toppings"></div>
-        </div>
-
-        <!-- רטבים -->
-        <div class="bg-white rounded-2xl p-4 mb-5 shadow">
-            <div class="font-bold mb-3">4. רטבים</div>
-            <div class="flex flex-wrap gap-2" id="sauces"></div>
-        </div>
-
-        <!-- תצוגה -->
-        <div class="bg-white rounded-2xl shadow p-4 mb-6">
-            <div class="font-bold mb-2">הטאקו שלך</div>
-            <div id="preview" class="min-h-[80px]"></div>
-            <div class="text-right text-2xl font-black mt-2" id="count">0</div>
-        </div>
-
-        <div class="flex gap-3">
-            <button onclick="surprise()" class="flex-1 py-3 bg-purple-600 text-white rounded-2xl font-bold">הפתעה אותי</button>
-            <button onclick="makeTaco()" class="flex-1 py-3 bg-orange-500 text-white rounded-2xl font-bold">הכן טאקו!</button>
-        </div>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">אפליקציה למחשב · חינם</span>
+      <h1>הערוץ שלך, <span class="grad">מסודר.</span><br>סרטון אחרי סרטון.</h1>
+      <p class="lead">Creator Desk מתזמנת לכל סרטון צילום, עריכה והעלאה, מזכירה בזמן ודוחפת אותך להמשיך. בלי הרשמה, והנתונים נשארים אצלך במחשב.</p>
+      <div class="btn-row">
+        <a class="btn" href="download.html">⬇️ להורדה</a>
+        <a class="btn ghost" href="#how">איך זה עובד</a>
+      </div>
+      <p class="fineprint">ל-<bdi>Windows</bdi> ול-<bdi>Mac</bdi> · הקוד פתוח לעיון ב-<a href="https://github.com/eravd33-ship-it/taco-builder">GitHub</a></p>
     </div>
+    <figure class="shot"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/app-today-dark.webp"><img src="assets/img/app-today-light.webp" alt="המסך הראשי של האפליקציה: משימות היום, משימות קבועות, ההתקדמות השבועית ומשפט מוטיבציה" width="1650" height="1050" decoding="async"></picture></figure>
+  </div>
+</section>
 
-    <script>
-        const data = {
-            tortillas: [{id:'corn',name:'תירס',emoji:'🌽'},{id:'flour',name:'קמח',emoji:'🫓'}],
-            proteins: [{id:'beef',name:'בקר',emoji:'🥩'},{id:'chicken',name:'עוף',emoji:'🍗'},{id:'tofu',name:'טופו',emoji:'🥦'}],
-            toppings: [{id:'lettuce',name:'חסה',emoji:'🥬'},{id:'tomato',name:'עגבניה',emoji:'🍅'},{id:'avocado',name:'אבוקדו',emoji:'🥑'},{id:'cheese',name:'גבינה',emoji:'🧀'}],
-            sauces: [{id:'salsa',name:'סלסה',emoji:'🥫'},{id:'guac',name:'גוואקמולי',emoji:'🥑'},{id:'hot',name:'חריף',emoji:'🔥'}]
-        };
-        let state = {tortilla:null, protein:null, toppings:new Set(), sauces:new Set()};
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>הכול במקום אחד</h2>
+      <p>כל מה שיוצר צריך כדי להיות עקבי, בלי גיליונות ובלי לזכור הכול בראש.</p>
+    </div>
+    <div class="grid">
+      <article class="card"><div class="icon" aria-hidden="true">🎬</div><h3>תזמון סרטונים</h3><p>נותנים שם ותאריך פרסום, והאפליקציה מתזמנת אחורה: צילום, עריכה והעלאה. כל שלב מסומן בלחיצה.</p></article>
+      <article class="card"><div class="icon" aria-hidden="true">🔔</div><h3>תזכורות בזמן</h3><p>סיכום בוקר עם מה שצריך לעשות היום, וצ'ק-אין בערב על מה שנשאר פתוח. כחלון קופץ במחשב.</p></article>
+      <article class="card"><div class="icon" aria-hidden="true">💪</div><h3>מוטיבציה ויעדים</h3><p>משפט יומי, חגיגה על כל העלאה, יעד שבועי, רצף שבועות ודחיפה עדינה כשמפגרים.</p></article>
+      <article class="card"><div class="icon" aria-hidden="true">💡</div><h3>רעיונות לסרטונים</h3><p>כל רעיון נשמר בשנייה, ובלחיצה אחת הופך לסרטון מתוזמן.</p></article>
+      <article class="card"><div class="icon" aria-hidden="true">📈</div><h3>יוטיוב ודרייב</h3><p>אופציונלי: נתוני הערוץ בכל בוקר, תיקייה בדרייב לכל סרטון וגיבוי יומי. מתחברים לחשבון גוגל מתוך האפליקציה.</p></article>
+      <article class="card"><div class="icon" aria-hidden="true">🤖</div><h3>עוזר בינה מלאכותית</h3><p>אופציונלי: צ'אט שמכיר את הערוץ שלך ומציע רעיונות וכותרות. דורש מפתח של Anthropic, בתשלום לפי שימוש.</p></article>
+    </div>
+  </div>
+</section>
 
-        function render() {
-            // טורטיה
-            let html = '';
-            data.tortillas.forEach(item => {
-                html += `<div onclick="selectTortilla('\( {item.id}', this)" class="border-2 border-amber-200 rounded-2xl p-4 text-center cursor-pointer"><div class="text-5xl"> \){item.emoji}</div><div class="font-bold">${item.name}</div></div>`;
-            });
-            document.getElementById('tortilla').innerHTML = html;
+<section class="section alt" id="how">
+  <div class="wrap">
+    <div class="section-head"><h2>איך זה עובד</h2><p>שלושה צעדים, ואחר כך האפליקציה עושה את החלק של הזכרון.</p></div>
+    <ol class="steps">
+      <li><h3>מתכננים</h3><p>כותבים שם לסרטון ובוחרים תאריך פרסום. אפשר גם להפוך רעיון שמור לסרטון.</p></li>
+      <li><h3>מקבלים תזכורות</h3><p>האפליקציה מתזמנת את השלבים, ומזכירה בבוקר ובערב מה צריך לעשות.</p></li>
+      <li><h3>מסמנים ומתקדמים</h3><p>לוחצים "בוצע", ורואים את ההתקדמות מול היעד השבועי. בהעלאה מחכה חגיגה קטנה.</p></li>
+    </ol>
+  </div>
+</section>
 
-            // חלבון
-            html = '';
-            data.proteins.forEach(item => {
-                html += `<div onclick="selectProtein('\( {item.id}', this)" class="border-2 border-orange-200 rounded-2xl p-4 text-center cursor-pointer"><div class="text-5xl"> \){item.emoji}</div><div class="font-bold">${item.name}</div></div>`;
-            });
-            document.getElementById('protein').innerHTML = html;
+<section class="section" id="screens">
+  <div class="wrap">
+    <div class="section-head"><h2>ככה זה נראה</h2><p>המסכים הם מהאפליקציה עצמה, עם נתוני דוגמה. האפליקציה מתאימה את עצמה אוטומטית למצב בהיר או כהה.</p></div>
+    <div class="gallery">
+      <figure class="shot"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/app-videos-dark.webp"><img src="assets/img/app-videos-light.webp" alt="מסך הסרטונים: כל סרטון עם שלושת השלבים צילום, עריכה והעלאה ותאריך לכל שלב" width="1650" height="1050" loading="lazy" decoding="async"></picture><figcaption><b>סרטונים</b> · כל סרטון עם שלושה שלבים ותאריכים</figcaption></figure>
+      <figure class="shot"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/app-routines-dark.webp"><img src="assets/img/app-routines-light.webp" alt="מסך המשימות הקבועות: תזכורות שחוזרות בימים שבחרת, כמו להגיב לתגובות ולבדוק אנליטיקס" width="1650" height="1050" loading="lazy" decoding="async"></picture><figcaption><b>קבועות</b> · תזכורות שחוזרות בימים שבחרת</figcaption></figure>
+      <figure class="shot"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/app-ideas-dark.webp"><img src="assets/img/app-ideas-light.webp" alt="מסך הרעיונות: רשימת רעיונות שמורים, וכפתור להפיכת רעיון לסרטון" width="1650" height="1050" loading="lazy" decoding="async"></picture><figcaption><b>רעיונות</b> · שומרים בשנייה, מתזמנים בלחיצה</figcaption></figure>
+      <figure class="shot"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div><picture><source media="(prefers-color-scheme: dark)" srcset="assets/img/app-goals-dark.webp"><img src="assets/img/app-goals-light.webp" alt="מסך היעדים: יעד העלאות שבועי והתקדמות" width="1650" height="1050" loading="lazy" decoding="async"></picture><figcaption><b>יעדים</b> · יעד שבועי, התקדמות ורצף</figcaption></figure>
 
-            // תוספות
-            html = '';
-            data.toppings.forEach(item => {
-                html += `<div onclick="toggleTopping('\( {item.id}', this)" class="px-4 py-2 border border-green-300 bg-green-50 rounded-2xl flex items-center gap-2 cursor-pointer"><span class="text-2xl"> \){item.emoji}</span> <span>${item.name}</span></div>`;
-            });
-            document.getElementById('toppings').innerHTML = html;
+    </div>
+  </div>
+</section>
 
-            // רטבים
-            html = '';
-            data.sauces.forEach(item => {
-                html += `<div onclick="toggleSauce('\( {item.id}', this)" class="px-4 py-2 border border-red-300 bg-red-50 rounded-2xl flex items-center gap-2 cursor-pointer"><span class="text-2xl"> \){item.emoji}</span> <span>${item.name}</span></div>`;
-            });
-            document.getElementById('sauces').innerHTML = html;
-        }
+<section class="section alt" id="privacy">
+  <div class="wrap split">
+    <div>
+      <h2>הנתונים נשארים אצלך</h2>
+      <p class="muted" style="margin-top:12px">האפליקציה רצה על המחשב שלך ולא צריכה ממך חשבון.</p>
+    </div>
+    <ul class="checks">
+      <li>הכול נשמר בקובץ אחד במחשב שלך.</li>
+      <li>בלי הרשמה ובלי כניסה לחשבון כדי להתחיל.</li>
+      <li>יוטיוב, דרייב ועוזר ה-AI הם אופציונליים, ופועלים רק אם חיברת אותם בעצמך.</li>
+      <li>בדרייב האפליקציה רואה רק קבצים ותיקיות שהיא עצמה יצרה, ולא את שאר הדרייב שלך.</li>
+    </ul>
+  </div>
+</section>
 
-        function selectTortilla(id, el) {
-            document.querySelectorAll('#tortilla > div').forEach(e => e.classList.remove('border-amber-500'));
-            el.classList.add('border-amber-500');
-            state.tortilla = id;
-            updatePreview();
-        }
+<section class="section" id="faq">
+  <div class="wrap prose" style="max-width:820px">
+    <h2 style="margin-top:0">שאלות נפוצות</h2>
+    <div style="margin-top:24px">
+      <details><summary>כמה זה עולה?</summary><p>האפליקציה חינמית. רק עוזר ה-AI משתמש בשירות בתשלום של Anthropic (בדרך כלל כמה סנטים לתשובה), והוא אופציונלי לגמרי.</p></details>
+      <details><summary>התזכורות עובדות כשהאפליקציה סגורה?</summary><p>לא, האפליקציה צריכה להיות פתוחה. אפשר למזער אותה, או להפעיל בהגדרות "הפעלה אוטומטית עם המחשב", והיא תיפתח ממוזערת בכל כניסה.</p></details>
+      <details><summary>על אילו מחשבים זה עובד?</summary><p>על <bdi>Windows</bdi> ועל <bdi>Mac</bdi>. אפשר גם להריץ מהקוד על <bdi>Linux</bdi>. ההוראות בעמוד ההורדה.</p></details>
+      <details><summary>האם זה הלוגו של יוטיוב?</summary><p>לא. הסמל הוא "נגן" אדום מקורי בסגנון ערוץ וידאו, כי הלוגו של יוטיוב הוא סימן מסחרי רשום. אפשר להחליף אותו בתמונה של הערוץ שלך.</p></details>
+      <details><summary>יש גם בוט טלגרם?</summary><p>כן, עם יכולות דומות לתזכורות בטלפון. ההסבר <a href="guide.html#telegram">במדריך</a>.</p></details>
+    </div>
+  </div>
+</section>
 
-        function selectProtein(id, el) {
-            document.querySelectorAll('#protein > div').forEach(e => e.classList.remove('border-orange-500'));
-            el.classList.add('border-orange-500');
-            state.protein = id;
-            updatePreview();
-        }
+<section class="cta">
+  <div class="wrap">
+    <div class="cta-box">
+      <h2>מוכן לסדר את הערוץ?</h2>
+      <p>ההורדה לוקחת דקה, ואפשר להתחיל מיד.</p>
+      <a class="btn" href="download.html">⬇️ להורדה</a>
+    </div>
+  </div>
+</section>
 
-        function toggleTopping(id, el) {
-            if (state.toppings.has(id)) {
-                state.toppings.delete(id);
-                el.classList.remove('border-green-500', 'bg-green-100');
-            } else {
-                state.toppings.add(id);
-                el.classList.add('border-green-500', 'bg-green-100');
-            }
-            updatePreview();
-        }
+</main>
+<footer class="site-footer">
+  <div class="wrap foot">
+    <div>
+      <b>Creator Desk</b>
+      העוזר האישי לערוץ היוטיוב שלך.<br>הנתונים נשארים אצלך במחשב.
+    </div>
+    <div>
+      <b>באתר</b>
+      <ul>
+        <li><a href="index.html">בית</a></li>
+        <li><a href="guide.html">מדריך</a></li>
+        <li><a href="download.html">הורדה</a></li>
+      </ul>
+    </div>
+    <div>
+      <b>עוד</b>
+      <ul>
+        <li><a href="https://github.com/eravd33-ship-it/taco-builder">הקוד ב-GitHub</a></li>
+        <li><a href="guide.html#telegram">בוט טלגרם</a></li>
+        <li><a href="taco.html">בנה את הטאקו שלך 🌮</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
 
-        function toggleSauce(id, el) {
-            if (state.sauces.has(id)) {
-                state.sauces.delete(id);
-                el.classList.remove('border-red-500', 'bg-red-100');
-            } else {
-                state.sauces.add(id);
-                el.classList.add('border-red-500', 'bg-red-100');
-            }
-            updatePreview();
-        }
-
-        function updatePreview() {
-            const prev = document.getElementById('preview');
-            const countEl = document.getElementById('count');
-            let html = '';
-            let total = 0;
-
-            const tor = data.tortillas.find(x => x.id === state.tortilla);
-            const pro = data.proteins.find(x => x.id === state.protein);
-            const tops = data.toppings.filter(x => state.toppings.has(x.id));
-            const sauc = data.sauces.filter(x => state.sauces.has(x.id));
-
-            if (tor) { html += `<div class="flex items-center gap-2 mb-1"><span class="text-3xl">\( {tor.emoji}</span> <span class="font-bold"> \){tor.name}</span></div>`; total++; }
-            if (pro) { html += `<div class="flex items-center gap-2 mb-1"><span class="text-3xl">\( {pro.emoji}</span> <span class="font-bold"> \){pro.name}</span></div>`; total++; }
-            if (tops.length) { html += `<div class="text-sm mt-2">תוספות: ${tops.map(t => t.emoji).join(' ')}</div>`; total += tops.length; }
-            if (sauc.length) { html += `<div class="text-sm">רטבים: ${sauc.map(s => s.emoji).join(' ')}</div>`; total += sauc.length; }
-
-            prev.innerHTML = html || 'בחר מרכיבים...';
-            countEl.textContent = total;
-        }
-
-        function surprise() {
-            state.tortilla = data.tortillas[0].id;
-            state.protein = data.proteins[0].id;
-            state.toppings = new Set(['lettuce', 'tomato']);
-            state.sauces = new Set(['salsa']);
-            render();
-            updatePreview();
-        }
-
-        function makeTaco() {
-            if (!state.tortilla || !state.protein) {
-                alert('בחר טורטיה וחלבון');
-                return;
-            }
-            alert('🌮 הטאקו מוכן! תהנה!');
-        }
-
-        function init() {
-            render();
-            document.getElementById('preview').innerHTML = 'בחר מרכיבים...';
-        }
-        window.onload = init;
-    </script>
 </body>
 </html>
