@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dimension Progress</title>
+<style>
+  :root {
+    --pop-ease: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --pop-duration: 0.5s;
+    --step: 0.2s;
+    --block-size: clamp(48px, 14vmin, 112px);
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+
+  html, body {
+    height: 100%;
+    background: transparent; /* שקוף ל-Browser Source */
+  }
+
+  body {
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  .widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(12px, 3vmin, 24px);
+    padding: clamp(16px, 4vmin, 32px) clamp(20px, 5vmin, 44px);
+    max-width: 100%;
+    background: rgba(18, 18, 24, 0.6);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .title {
+    color: #fff;
+    font-size: clamp(18px, 5vmin, 36px);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  /* השורה תמיד משמאל לימין: בלוק ← חץ ← בלוק ← חץ ← בלוק */
+  .steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 2.5vmin, 22px);
+    direction: ltr;
+  }
+
+  .block {
+    width: var(--block-size);
+    height: var(--block-size);
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+  }
+
+  .arrow {
+    width: calc(var(--block-size) * 0.4);
+    height: calc(var(--block-size) * 0.4);
+    flex: none;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+
+  /* אנימציית פופ-אפ עם Overshoot */
+  @keyframes pop {
+    from { transform: scale(0); }
+    to   { transform: scale(1); }
+  }
+
+  .pop {
+    animation: pop var(--pop-duration) var(--pop-ease) both;
+    animation-delay: calc(var(--i) * var(--step));
+  }
+
+  /* --i = סדר ההופעה: כותרת 0, בלוק 1 = 0.2s, חץ = 0.4s, בלוק 2 = 0.6s, חץ = 0.8s, בלוק 3 = 1.0s */
+  .title        { --i: 0; }
+  .steps > :nth-child(1) { --i: 1; }
+  .steps > :nth-child(2) { --i: 2; }
+  .steps > :nth-child(3) { --i: 3; }
+  .steps > :nth-child(4) { --i: 4; }
+  .steps > :nth-child(5) { --i: 5; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pop { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="widget">
+    <h1 class="title pop">מימד 1 מתוך 3</h1>
+
+    <div class="steps">
+      <!-- החלף את ה-src בתמונות הבלוקים האמיתיות -->
+      <img class="block pop" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%236b8e23'/%3E%3Crect y='5' width='16' height='11' fill='%238b5a2b'/%3E%3C/svg%3E">
+
+      <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+
+      <img class="block pop" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23a33'/%3E%3Crect x='2' y='2' width='12' height='12' fill='%23511'/%3E%3C/svg%3E">
+
+      <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+
+      <img class="block pop" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23e8e4a0'/%3E%3Crect x='3' y='3' width='10' height='10' fill='%23c9c27a'/%3E%3C/svg%3E">
+    </div>
+  </div>
+
+</body>
+</html>
