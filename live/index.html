@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>כתוביות חיות – תרגום לעברית בזמן אמת</title>
+  <meta name="description" content="מקרבים את הטלפון למי שמדבר, ורואים כתוביות בעברית תוך שניות. בלי התקנה, בלי הרשמה.">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="כתוביות חיות">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="icons/icon.svg" alt="" width="28" height="28"><span>כתוביות חיות</span></div>
+  <label class="lang-pick">
+    <span class="sr-only">שפת הדיבור</span>
+    <select id="lang" class="pill"></select>
+  </label>
+  <button type="button" class="tool" id="btn-settings" aria-label="הגדרות">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.4a.5.5 0 0 0-.6-.2l-2.5 1a7.4 7.4 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.4a.5.5 0 0 0 .1.6L4.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.4c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.4a.5.5 0 0 0-.1-.6L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
+  </button>
+</header>
+
+<main class="stage" id="stage">
+  <div class="status" id="status" role="status" data-state="idle"><i aria-hidden="true"></i><span id="status-text">מוכן</span></div>
+
+  <section class="empty" id="empty">
+    <h1>כתוביות בעברית, בזמן אמת</h1>
+    <p>לוחצים על המיקרופון ומקרבים את הטלפון למי שמדבר. הכתוביות מופיעות כאן תוך שניות.</p>
+    <p class="hint">קודם בוחרים למעלה באיזו שפה מדברים.</p>
+    <button type="button" class="link" id="btn-demo">רוצים לראות איך זה נראה? הדגמה</button>
+  </section>
+
+  <div class="lines" id="lines" aria-live="polite" aria-relevant="additions"></div>
+  <div class="line live" id="live" aria-live="off" hidden></div>
+</main>
+
+<div class="notice" id="notice" role="alert" hidden>
+  <span id="notice-text"></span>
+  <button type="button" class="notice-close" id="notice-close" aria-label="סגירת ההודעה">✕</button>
+</div>
+
+<footer class="controls">
+  <div class="group">
+    <button type="button" class="tool" id="btn-smaller" dir="ltr" aria-label="הקטנת הכתוביות">A−</button>
+    <button type="button" class="tool" id="btn-bigger" dir="ltr" aria-label="הגדלת הכתוביות">A+</button>
+  </div>
+  <button type="button" class="mic" id="btn-mic" aria-pressed="false" aria-label="התחלת האזנה">
+    <svg class="i-mic" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4Zm6-4a1 1 0 1 1 2 0 8 8 0 0 1-7 7.9V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.1A8 8 0 0 1 4 11a1 1 0 1 1 2 0 6 6 0 0 0 12 0Z"/></svg>
+    <svg class="i-stop" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>
+  </button>
+  <div class="group end">
+    <button type="button" class="tool wide" id="btn-orig" aria-pressed="true">מקור</button>
+    <button type="button" class="tool wide" id="btn-transcript">תמלול</button>
+  </div>
+</footer>
+
+<dialog id="dlg-settings">
+  <form method="dialog" class="sheet">
+    <h2>הגדרות</h2>
+
+    <label class="field">
+      <span>מנוע התרגום</span>
+      <select id="set-engine" class="pill">
+        <option value="auto">אוטומטי (מומלץ)</option>
+        <option value="device">במכשיר (⁨Chrome⁩ בלבד, פרטי וחינמי)</option>
+        <option value="google">⁨Google Cloud⁩ (עם מפתח)</option>
+        <option value="mymemory">חינמי, ⁨MyMemory⁩ (מכסה יומית קטנה)</option>
+      </select>
+    </label>
+
+    <label class="field">
+      <span>מפתח Google Cloud Translation <small>(אופציונלי)</small></span>
+      <input id="set-key" class="pill" type="password" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza…">
+      <small>נשמר רק בטלפון הזה, ונשלח רק ל-<bdi>Google</bdi>. כדאי להגביל אותו בקונסולה לכתובת של האתר ולשירות <bdi>Cloud Translation</bdi>.</small>
+    </label>
+
+    <label class="check"><input type="checkbox" id="set-orig"><span>להציג מתחת לכל כתובית גם את הטקסט המקורי</span></label>
+    <label class="check"><input type="checkbox" id="set-live"><span>תרגום מהיר תוך כדי דיבור <small>באינטרנט זה צורך הרבה יותר מהמכסה. בתרגום שבמכשיר זה פועל תמיד.</small></span></label>
+
+    <p class="privacy"><b>פרטיות:</b> אין שרת של האפליקציה ושום דבר לא נשמר אצלנו. הקול נשלח לשירות זיהוי הדיבור של הדפדפן (<bdi>Google</bdi> ב-<bdi>Chrome</bdi>, <bdi>Apple</bdi> ב-<bdi>Safari</bdi>), והטקסט נשלח לשירות התרגום שנבחר, אלא אם התרגום מתבצע במכשיר.</p>
+
+    <div class="row">
+      <button type="button" class="btn ghost" id="btn-clear">מחיקת הכתוביות</button>
+      <button class="btn" value="close">סגירה</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-transcript">
+  <form method="dialog" class="sheet">
+    <h2>תמלול</h2>
+    <div class="transcript" id="transcript" tabindex="0"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="btn-copy">העתקה</button>
+      <button type="button" class="btn ghost" id="btn-save">שמירה כקובץ</button>
+      <button class="btn" value="close">סגירה</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>
