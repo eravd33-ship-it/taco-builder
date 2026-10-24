@@ -5,11 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dimension Progress</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@800&display=swap&subset=hebrew');
+
   :root {
     --pop-ease: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     --pop-duration: 0.5s;
     --step: 0.2s;
-    --block-size: clamp(48px, 14vmin, 112px);
+    --gold: #ffb700;
+    --block-size: clamp(52px, 15vmin, 96px);
+
+    /* Placeholders: החלף ב-url("grass.png") וכו' כדי להשתמש בתמונות אמיתיות */
+    --tex-1: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB40lEQVR42n2STW7TQBiGH1KniW2NE8ehcrBKEhWEIvkIcApuwSl6Ec7TLQukLoJFo+DWBDtDbTkOsDCL0QxuK/GtRu/M9/7Zzz58fNsCbJM95xcT9PiBhyxKAO53NYvVDFmU+IHHzfUdAIvVDGub7AHwxMAsAuZxF9M4wOjM5eb6Duv8YoIm2SZ746SL/W9622RPvB6zWM2I12PeZS/YJntefhqY5Xg9Vk6uWuL1GP+qNRFO3oevL9Ncsundc7YfktzueHX0CYMRfPnNKLMYnPZ582dC37JIc4mwh+wmv/ie/sTyhaNUMgcElHWjslYHPNcGFOYLh7JuiJcRsjoQr9XdyWw8uKSFtoXkdsfzsQAgzSW0EAYjvv2Q9C3lZCdLBqd9FUk49OJlZJSEPXxQkOfayOrw79MKh6o5PnDZ22SFUgOq5kiaS8q6IZr6+MJBRwTYZAXR1DexACyt3n2oCfVZk+mZh4FxZnUBvaij6NK6ZMIekuaSeBmxyQpFsMkK04NuuawbqubIJiue9ALw+WuqfqTHVvWC59oIe8g8DEw/2pW+i6a+IqiaI/Eyoqwb5mFgCvJc27jTsTzXxhcOnmtT1o0iiKa+sSSrwxO17qS5NAV6rq3+RA3oxcd59Vmrdsn+Ajli/YduHAiXAAAAAElFTkSuQmCC");
+    --tex-2: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB/UlEQVR42lWSzWrbQBSFv1hBLRowo8WYECGjRRMMBkNFd3kE7/JEeY6+Rx7BWy9ECupO2B6ImYUUFU0cOSZduDNV7uoyc3/OPedc/Ly///i13QIwT1NcPg5DNnVNYy2ZUszTlFVZMo1jCq1ZJAmF1oy2+z0AlTG4HKDQmmkcs8xzKmMAmMYxAIskoe17lnlO8P3q6qEyhmWe03Ydb6cTlTG+yLQtAH9eX/n9/Mzb6cTL4cDheOTidGJUGUOmFKuy9NsXSXKG33WMw9C/L/OcYRRaM1rmOU3XAdD2PZUxtH3vizZ17XPHT2Mt0zgmU+rMgRTC8wDQdB2Ntb5xGsfM09SjWSSJrwviIHhorOV2MuHHzQ3H93cOxyO3kwkvhwNSCL4EAU+7HRdBwNcw5Nv1NU+7HVIILjOl/D0OuhSCTV0jhfA8NNZ6SVdlSWMtUghGDoqMIipjzsVd58+SQtD2PYskIVOKyhh/f9N1jMZh6IszpSi0RgrBOAyZp6nnxZEpo4hCaypjzids6tob5BOJXXceFkUeiVNARpF35OhuNqPtey/lkPlMqf+N//5lFOF6ZBQxelyvP5klU4q72cwjcqjcIBfu/dJpOnTadr+n0PqTK4ekPq7XOPUuh5+rsvTSudsLrT3jjbUMnTtP07OMbvJwixTCnzKM4ZJVWfIXPIAjWnPvyN4AAAAASUVORK5CYII=");
+    --tex-3: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABp0lEQVR42nWTMW6jQBiFPyNXQDEaCxq7QsJd0kXkDLlTzpAj7CWiXGC3CHJnUnmkSQNFQB5NAbRsQWYWvMprgNE//3vvfz+bj+plStIcdSnZHzLCMEFdSgD/DdC1Cq0VWZYDoLWieHxi8/n5awIYeksUi9UFaw0AQkiSNGccOwCq84m7+wcAtk2tyY8FDq4oioV/Dr315wBS7gjDhK5V/xT8BFe4xFJNMPSWobdeelNrnCXHbK0hSXOvaonN19fr5Dw7RLGgqTXGXMmy3Nuw1rA/ZCt1W+c7Sefplu9vSLlDCAmAtQZrzfeclG/k5hY4L+PY0bVzTPtDRhQLjLmuGF18+bFgHDvK9zc2H9XL5OK6lbdMZeitV6kuJcZc5z348/t5chddpMvIht6uZnOLwHltao0Qkq5Vnv2nS8ukAneYHwuiWBDFgnHsqM4nz661IklzqvNp1SiKBUGS5r5w6K3vXjw+eXYpd3StQsqdJ2tqTRgm8yaGYfJffO6/WM5jORO3G1tXdHf/4DO+9WvMddXcpVSdT3OMy47L99vNa2rN/pB5mwB/AZqvB5tQ2rl/AAAAAElFTkSuQmCC");
   }
 
   * { box-sizing: border-box; margin: 0; }
@@ -23,60 +31,89 @@
     display: grid;
     place-items: center;
     padding: 16px;
-    font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
     overflow: hidden;
+    font-family: "Rubik", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
   }
 
   .widget {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(12px, 3vmin, 24px);
-    padding: clamp(16px, 4vmin, 32px) clamp(20px, 5vmin, 44px);
+    gap: clamp(14px, 4vmin, 28px);
     max-width: 100%;
-    background: rgba(18, 18, 24, 0.6);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    padding: clamp(18px, 5vmin, 34px) clamp(22px, 7vmin, 56px);
+    background: linear-gradient(180deg, rgba(34, 34, 48, 0.68), rgba(12, 12, 18, 0.68));
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 24px;
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 0 24px rgba(255, 255, 255, 0.03);
   }
 
   .title {
     color: #fff;
-    font-size: clamp(18px, 5vmin, 36px);
+    font-size: clamp(20px, 6vmin, 38px);
     font-weight: 800;
     letter-spacing: 0.5px;
-    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    text-shadow: 0 3px 14px rgba(0, 0, 0, 0.7);
   }
 
-  /* השורה תמיד משמאל לימין: בלוק ← חץ ← בלוק ← חץ ← בלוק */
+  .title b {
+    color: var(--gold);
+    text-shadow: 0 0 16px rgba(255, 183, 0, 0.55), 0 3px 14px rgba(0, 0, 0, 0.7);
+  }
+
+  /* השורה תמיד משמאל לימין: בלוק → חץ → בלוק → חץ → בלוק */
   .steps {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(8px, 2.5vmin, 22px);
+    gap: clamp(8px, 3vmin, 24px);
     direction: ltr;
   }
 
   .block {
+    position: relative;
+    flex: none;
     width: var(--block-size);
     height: var(--block-size);
-    object-fit: contain;
+    overflow: hidden;
+    border-radius: 12%;
+    background: var(--tex) center / 100% 100% no-repeat;
     image-rendering: pixelated;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+    box-shadow:
+      0 10px 20px rgba(0, 0, 0, 0.5),
+      0 0 26px -4px var(--glow),
+      inset 0 2px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -3px 0 rgba(0, 0, 0, 0.3);
   }
 
+  /* ברק עדין על הבלוק */
+  .block::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 45%);
+  }
+
+  .block:nth-child(1) { --tex: var(--tex-1); --glow: #6fbf3a; }
+  .block:nth-child(3) { --tex: var(--tex-2); --glow: #d63a3a; }
+  .block:nth-child(5) { --tex: var(--tex-3); --glow: #e6e48a; }
+
   .arrow {
-    width: calc(var(--block-size) * 0.4);
-    height: calc(var(--block-size) * 0.4);
     flex: none;
+    width: calc(var(--block-size) * 0.42);
+    height: calc(var(--block-size) * 0.42);
     fill: none;
-    stroke: #fff;
+    stroke: var(--gold);
     stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;
-    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 0 8px rgba(255, 183, 0, 0.6));
   }
 
   /* אנימציית פופ-אפ עם Overshoot */
@@ -91,7 +128,7 @@
   }
 
   /* --i = סדר ההופעה: כותרת 0, בלוק 1 = 0.2s, חץ = 0.4s, בלוק 2 = 0.6s, חץ = 0.8s, בלוק 3 = 1.0s */
-  .title        { --i: 0; }
+  .title                 { --i: 0; }
   .steps > :nth-child(1) { --i: 1; }
   .steps > :nth-child(2) { --i: 2; }
   .steps > :nth-child(3) { --i: 3; }
@@ -106,19 +143,14 @@
 <body>
 
   <div class="widget">
-    <h1 class="title pop">מימד 1 מתוך 3</h1>
+    <h1 class="title pop">מימד <b>1</b> מתוך 3</h1>
 
     <div class="steps">
-      <!-- החלף את ה-src בתמונות הבלוקים האמיתיות -->
-      <img class="block pop" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%236b8e23'/%3E%3Crect y='5' width='16' height='11' fill='%238b5a2b'/%3E%3C/svg%3E">
-
+      <div class="block pop" role="img" aria-label="Overworld"></div>
       <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
-
-      <img class="block pop" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23a33'/%3E%3Crect x='2' y='2' width='12' height='12' fill='%23511'/%3E%3C/svg%3E">
-
+      <div class="block pop" role="img" aria-label="Nether"></div>
       <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
-
-      <img class="block pop" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23e8e4a0'/%3E%3Crect x='3' y='3' width='10' height='10' fill='%23c9c27a'/%3E%3C/svg%3E">
+      <div class="block pop" role="img" aria-label="End"></div>
     </div>
   </div>
 
