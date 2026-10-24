@@ -67,20 +67,20 @@
     text-shadow: 0 0 16px rgba(255, 183, 0, 0.55), 0 3px 14px rgba(0, 0, 0, 0.7);
   }
 
-  /* השורה תמיד משמאל לימין: בלוק → חץ → בלוק → חץ → בלוק */
+  /* השורה מימין לשמאל: הבלוק הראשון בצד ימין והחצים מצביעים שמאלה */
   .steps {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: clamp(8px, 3vmin, 24px);
-    direction: ltr;
+    direction: rtl;
   }
 
   .block {
     position: relative;
     flex: none;
-    width: var(--block-size);
-    height: var(--block-size);
+    width: var(--size, var(--block-size));
+    height: var(--size, var(--block-size));
     overflow: hidden;
     border-radius: 12%;
     background: var(--tex) center / 100% 100% no-repeat;
@@ -100,7 +100,8 @@
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 45%);
   }
 
-  .block:nth-child(1) { --tex: var(--tex-1); --glow: #6fbf3a; }
+  /* הבלוק הראשון (המימד הנוכחי) גדול יותר משני האחרים */
+  .block:nth-child(1) { --tex: var(--tex-1); --glow: #6fbf3a; --size: calc(var(--block-size) * 1.35); }
   .block:nth-child(3) { --tex: var(--tex-2); --glow: #d63a3a; }
   .block:nth-child(5) { --tex: var(--tex-3); --glow: #e6e48a; }
 
@@ -147,9 +148,9 @@
 
     <div class="steps">
       <div class="block pop" role="img" aria-label="Overworld"></div>
-      <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+      <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>
       <div class="block pop" role="img" aria-label="Nether"></div>
-      <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+      <svg class="arrow pop" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>
       <div class="block pop" role="img" aria-label="End"></div>
     </div>
   </div>
