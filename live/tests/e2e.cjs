@@ -284,6 +284,33 @@ async function translationRoute(context, { quota = false, log = [], pairs = [] }
     await ctx.close();
   });
 
+  await step('the downloadable single file works when opened straight from disk', async () => {
+    const ctx = await browser.newContext(phone);
+    await ctx.addInitScript(FAKE_SPEECH);
+    const outside = [];
+    await translationRoute(ctx);
+    const p = await ctx.newPage();
+    const errors = [];
+    p.on('pageerror', (e) => errors.push(e.message));
+    p.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+    p.on('request', (r) => { if (!r.url().startsWith('file:') && !r.url().startsWith('data:')) outside.push(r.url()); });
+    await p.goto(`file://${path.resolve(__dirname, '..', 'live-subtitles.html')}`);
+    assert.match(await text(p, '#empty h1'), /כתוביות בעברית/);
+    assert.equal(await p.evaluate(() => document.querySelector('.brand img').complete && document.querySelector('.brand img').naturalWidth > 0), true);
+    assert.equal(await p.locator('#btn-settings').count(), 1);
+    await p.click('#btn-settings');
+    assert.equal(await p.locator('#dlg-settings a[download]').count(), 0, 'no link to itself');
+    await p.click('#dlg-settings button[value=close]');
+    await p.click('#btn-mic');
+    await p.waitForFunction(() => window.__recs.length === 1);
+    await p.evaluate(() => window.__say([['hello world', true]]));
+    await p.waitForSelector('#lines .line .he:text("שלום עולם")');
+    assert.deepEqual(errors, []);
+    assert.deepEqual(outside, ['https://api.mymemory.translated.net/get?q=hello%20world&langpair=en%7Che']);
+    await shot(p, '12-single-file');
+    await ctx.close();
+  });
+
   assert.deepEqual(problems, [], 'no page errors or console errors');
   console.log(`\n${passed} steps passed`);
   await browser.close();

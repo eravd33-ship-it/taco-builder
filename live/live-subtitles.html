@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>כתוביות חיות – תרגום לעברית בזמן אמת</title>
+  <meta name="description" content="מקרבים את הטלפון למי שמדבר, ורואים כתוביות בעברית תוך שניות. בלי התקנה, בלי הרשמה.">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMjU2M2ViIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzA4OTFiMiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9InVybCgjYmcpIi8+CiAgPHBhdGggZD0iTTEzNiAxMjBoMjQwYTQwIDQwIDAgMCAxIDQwIDQwdjEzMGE0MCA0MCAwIDAgMS00MCA0MEgyNjJsLTcyIDYydi02MmgtNTRhNDAgNDAgMCAwIDEtNDAtNDBWMTYwYTQwIDQwIDAgMCAxIDQwLTQwWiIgZmlsbD0iI2ZmZiIvPgogIDxyZWN0IHg9IjEzNiIgeT0iMTkyIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI2IiByeD0iMTMiIGZpbGw9IiMwZjJhNWMiLz4KICA8cmVjdCB4PSIxNzYiIHk9IjI0NCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIyNiIgcng9IjEzIiBmaWxsPSIjMGYyYTVjIi8+Cjwvc3ZnPgo=" type="image/svg+xml">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="כתוביות חיות">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+/* Live subtitles. Dark on purpose: it reads like video captions and is easy on the eyes in a dim room. */
+:root {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --panel: #131a22;
+  --panel-2: #1b2430;
+  --line: #273244;
+  --text: #f4f7fb;
+  --muted: #9fb0c4;
+  --accent: #4c8dff;
+  --rec: #ef4444;
+  --warn: #f5b942;
+  --fs: 36px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans Hebrew", "Arial Hebrew", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden;
+  padding-top: env(safe-area-inset-top);
+}
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* top bar */
+.top { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; margin-inline-end: auto; white-space: nowrap; }
+.brand img { border-radius: 7px; }
+.pill {
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; min-height: 46px; padding: 0 14px; width: 100%;
+}
+select.pill {
+  appearance: none; -webkit-appearance: none; padding-inline-end: 38px; font-weight: 600;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%239fb0c4' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' d='m5 9 7 7 7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: left 14px center;
+}
+.lang-pick { width: auto; }
+.lang-pick .pill { width: auto; min-width: 150px; }
+@media (max-width: 420px) { .brand span { display: none; } .brand { margin-inline-end: 0; } .lang-pick { flex: 1; } .lang-pick .pill { width: 100%; } }
+
+/* stage */
+.stage {
+  position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 52px max(18px, calc((100% - 920px) / 2)) 14px; overflow: hidden;
+}
+.lines {
+  display: flex; flex-direction: column; gap: .5em; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 30%); mask-image: linear-gradient(to bottom, transparent 0, #000 30%);
+}
+.line { margin: 0; font-size: var(--fs); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+.live { margin-top: .5em; }
+.line.dim { opacity: .5; }
+.line .he { display: block; }
+.line .orig { display: block; margin-top: .2em; font-size: .5em; font-weight: 500; line-height: 1.4; color: var(--muted); text-shadow: none; }
+.line.pending .he, .live.wait .he { opacity: .7; }
+.line .src-only { color: var(--muted); font-weight: 500; }
+.line.failed .src-only { color: var(--warn); }
+.live .listening-hint { color: var(--muted); font-weight: 500; font-size: .6em; }
+
+.status {
+  position: absolute; top: 12px; inset-inline-start: 18px; display: flex; align-items: center; gap: 8px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px 4px 14px; font-size: 14px; color: var(--muted);
+}
+.status i { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.status[data-state="listening"] { color: var(--text); }
+.status[data-state="listening"] i { background: var(--rec); animation: blink 1.4s ease-in-out infinite; }
+.status[data-state="demo"] i { background: var(--accent); animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+
+.empty { position: absolute; inset: 52px 22px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; }
+.empty h1 { margin: 0 0 8px; font-size: 26px; line-height: 1.25; }
+.empty p { margin: 0; max-width: 30em; color: var(--muted); font-size: 18px; }
+.empty .hint { font-size: 15px; }
+.link { margin-top: 18px; background: none; border: 0; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; padding: 10px; }
+
+.notice {
+  display: flex; align-items: flex-start; gap: 10px; margin: 0 14px 10px; padding: 10px 12px 10px 8px;
+  background: #3a2a0b; border: 1px solid #6b4a10; color: #ffe2a3; border-radius: 14px; font-size: 15px;
+}
+.notice span { flex: 1; padding-top: 4px; }
+.notice-close { background: none; border: 0; color: inherit; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; }
+
+/* controls */
+.controls {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel);
+}
+.group { display: flex; gap: 8px; }
+.group.end { justify-content: flex-end; }
+.tool {
+  min-width: 48px; height: 48px; padding: 0 10px; border-radius: 14px; background: var(--panel-2); border: 1px solid var(--line);
+  font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+}
+.tool.wide { padding: 0 14px; font-size: 15px; }
+.tool[aria-pressed="true"] { background: #1c3358; border-color: #2f5aa3; }
+.tool:active, .mic:active { transform: scale(.96); }
+.mic {
+  position: relative; width: 76px; height: 76px; border-radius: 50%; border: 0; background: var(--accent); color: #06142e;
+  display: grid; place-items: center; box-shadow: 0 6px 20px rgba(76, 141, 255, .35);
+}
+.mic .i-stop { display: none; }
+.mic[aria-pressed="true"] { background: var(--rec); color: #fff; box-shadow: 0 6px 20px rgba(239, 68, 68, .4); }
+.mic[aria-pressed="true"] .i-mic { display: none; }
+.mic[aria-pressed="true"] .i-stop { display: block; }
+.mic[aria-pressed="true"]::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--rec); animation: ring 1.6s ease-out infinite;
+}
+@keyframes ring { from { transform: scale(1); opacity: .8; } to { transform: scale(1.45); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mic::after, .status i { animation: none !important; } }
+@media (max-width: 360px) { .tool.wide { padding: 0 9px; font-size: 14px; } .controls { gap: 6px; } }
+
+/* sheets */
+dialog {
+  border: 0; padding: 0; color: var(--text); background: var(--panel); width: min(560px, 100%); max-width: 100%;
+  margin: auto auto 0; border-radius: 22px 22px 0 0; max-height: 90vh; max-height: 90dvh;
+}
+dialog::backdrop { background: rgba(0, 0, 0, .65); }
+@media (min-width: 600px) { dialog { margin: auto; border-radius: 22px; } }
+.sheet { display: flex; flex-direction: column; gap: 14px; padding: 20px 18px calc(18px + env(safe-area-inset-bottom)); max-height: inherit; overflow: auto; margin: 0; }
+.sheet h2 { margin: 0; font-size: 22px; }
+.field { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+.field small, .check small { color: var(--muted); font-weight: 400; font-size: 13px; line-height: 1.45; }
+.check { display: flex; align-items: flex-start; gap: 10px; line-height: 1.45; }
+.check span { flex: 1; }
+.check small { display: block; }
+.check input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+.privacy { margin: 0; font-size: 14px; color: var(--muted); background: var(--panel-2); border-radius: 12px; padding: 10px 12px; }
+.privacy.download a { color: var(--accent); font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.btn { min-height: 46px; padding: 0 20px; border-radius: 14px; border: 0; background: var(--accent); color: #06142e; font-weight: 700; }
+.btn.ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+.transcript { overflow: auto; min-height: 120px; max-height: 55vh; max-height: 55dvh; display: flex; flex-direction: column; gap: 12px; }
+.transcript .empty-note { color: var(--muted); }
+.transcript .item { background: var(--panel-2); border-radius: 12px; padding: 10px 12px; }
+.transcript .item .he { font-weight: 700; font-size: 18px; }
+.transcript .item .orig { color: var(--muted); font-size: 14px; }
+</style>
+  <script type="module">
+// Spoken languages. `speech` is the BCP-47 tag the browser's recogniser wants,
+// `code` is what the translation services want. The target is always Hebrew.
+const LANGUAGES = [
+  { code: 'en', speech: 'en-US', he: 'אנגלית', native: 'English' },
+  { code: 'ar', speech: 'ar-SA', he: 'ערבית', native: 'العربية' },
+  { code: 'ru', speech: 'ru-RU', he: 'רוסית', native: 'Русский' },
+  { code: 'fr', speech: 'fr-FR', he: 'צרפתית', native: 'Français' },
+  { code: 'es', speech: 'es-ES', he: 'ספרדית', native: 'Español' },
+  { code: 'de', speech: 'de-DE', he: 'גרמנית', native: 'Deutsch' },
+  { code: 'it', speech: 'it-IT', he: 'איטלקית', native: 'Italiano' },
+  { code: 'pt', speech: 'pt-BR', he: 'פורטוגזית', native: 'Português' },
+  { code: 'tr', speech: 'tr-TR', he: 'טורקית', native: 'Türkçe' },
+  { code: 'uk', speech: 'uk-UA', he: 'אוקראינית', native: 'Українська' },
+  { code: 'pl', speech: 'pl-PL', he: 'פולנית', native: 'Polski' },
+  { code: 'nl', speech: 'nl-NL', he: 'הולנדית', native: 'Nederlands' },
+  { code: 'ro', speech: 'ro-RO', he: 'רומנית', native: 'Română' },
+  { code: 'hi', speech: 'hi-IN', he: 'הינדית', native: 'हिन्दी' },
+  { code: 'ja', speech: 'ja-JP', he: 'יפנית', native: '日本語' },
+  { code: 'ko', speech: 'ko-KR', he: 'קוריאנית', native: '한국어' },
+  { code: 'zh', speech: 'zh-CN', he: 'סינית', native: '中文' },
+];
+
+const DEFAULT_LANGUAGE = 'en';
+
+function findLanguage(code) {
+  return LANGUAGES.find((l) => l.code === code) || LANGUAGES.find((l) => l.code === DEFAULT_LANGUAGE);
+}
+
+// Translation into Hebrew. Three engines behind one function, with automatic fallback:
+//   device    Chrome's built-in on-device translator (free, private, works offline once its model is downloaded)
+//   google    Google Cloud Translation, with the user's own API key
+//   mymemory  MyMemory's free public API (small daily quota)
+
+const TARGET = 'he';
+
+class TranslateError extends Error {
+  // kind: 'quota' | 'auth' | 'unsupported' | 'loading' | 'network' | 'failed'
+  constructor(kind, message) {
+    super(message || kind);
+    this.name = 'TranslateError';
+    this.kind = kind;
+  }
+}
+
+const PERMANENT = new Set(['quota', 'auth', 'unsupported']);
+const MYMEMORY_CODES = { zh: 'zh-CN' };
+const REQUEST_TIMEOUT_MS = 8000;
+const CACHE_LIMIT = 300;
+const PAUSE_MS = 10 * 60 * 1000; // quota, bad key or unsupported language: don't ask again for a while
+const LOADING_PAUSE_MS = 15 * 1000; // on-device model still downloading
+const DEVICE_WAIT_MS = 1200; // how long a sentence waits for the on-device translator before an online engine takes over
+const DEVICE_TRANSLATE_MS = 5000;
+
+// MyMemory refuses queries over 500 bytes, and non-Latin letters take up to 3 bytes each.
+function splitForLimit(text, max) {
+  let rest = text.trim();
+  const limit = max || (/[^\x00-\x7f]/.test(rest) ? 150 : 450);
+  const out = [];
+  while (rest.length > limit) {
+    const head = rest.slice(0, limit);
+    let cut = Math.max(head.lastIndexOf('. '), head.lastIndexOf('? '), head.lastIndexOf('! '));
+    if (cut < limit / 2) cut = head.lastIndexOf(' ');
+    if (cut < limit / 2) cut = limit - 1;
+    out.push(rest.slice(0, cut + 1).trim());
+    rest = rest.slice(cut + 1).trim();
+  }
+  if (rest) out.push(rest);
+  return out;
+}
+
+const ENTITIES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&#x27;': "'", '&apos;': "'" };
+function decodeEntities(text) {
+  return text.replace(/&(?:amp|lt|gt|quot|apos|#39|#x27);|&#(\d+);/g, (m, dec) => (dec ? String.fromCodePoint(Number(dec)) : ENTITIES[m]));
+}
+
+// Chrome's on-device translator can take minutes to download its model, or never answer at all.
+// Nothing may wait on it for long, or the subtitles would freeze.
+function within(promise, ms, kind) {
+  let timer;
+  const late = new Promise((_, reject) => { timer = setTimeout(() => reject(new TranslateError(kind)), ms); });
+  return Promise.race([promise, late]).finally(() => clearTimeout(timer));
+}
+
+async function request(fetchImpl, url, init) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetchImpl(url, { ...init, signal: controller.signal });
+  } catch {
+    throw new TranslateError('network');
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function googleTranslate(fetchImpl, key, text, src) {
+  if (!key) throw new TranslateError('auth', 'no Google API key');
+  const res = await request(fetchImpl, `https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(key)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ q: text, source: src, target: TARGET, format: 'text' }),
+  });
+  if (!res.ok) {
+    const detail = JSON.stringify(await res.json().catch(() => ({})));
+    if (res.status === 429 || /limit|quota/i.test(detail)) throw new TranslateError('quota');
+    if (res.status === 401 || res.status === 403 || /api[_ ]?key|keyInvalid|referer|permission/i.test(detail)) throw new TranslateError('auth');
+    throw new TranslateError('failed', `google ${res.status}`);
+  }
+  const out = (await res.json())?.data?.translations?.[0]?.translatedText;
+  if (typeof out !== 'string') throw new TranslateError('failed', 'google: unexpected reply');
+  return out;
+}
+
+async function myMemoryTranslate(fetchImpl, text, src) {
+  const pair = `${MYMEMORY_CODES[src] || src}|${TARGET}`;
+  const res = await request(fetchImpl, `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(pair)}`);
+  if (res.status === 429) throw new TranslateError('quota');
+  if (!res.ok) throw new TranslateError('failed', `mymemory ${res.status}`);
+  const data = await res.json();
+  const out = data?.responseData?.translatedText;
+  if (data?.quotaFinished || (typeof out === 'string' && /MYMEMORY WARNING/i.test(out))) throw new TranslateError('quota');
+  if (Number(data?.responseStatus) !== 200 || typeof out !== 'string') throw new TranslateError('failed', 'mymemory: unexpected reply');
+  return decodeEntities(out);
+}
+
+function createDeviceEngine(scope, { onProgress, waitMs, translateMs }) {
+  const pending = new Map();
+  const ready = new Map();
+  function get(src) {
+    if (!pending.has(src)) {
+      const promise = (async () => {
+        const Translator = scope.Translator;
+        if (!Translator) throw new TranslateError('unsupported');
+        const options = { sourceLanguage: src, targetLanguage: TARGET };
+        if ((await Translator.availability(options)) === 'unavailable') throw new TranslateError('unsupported');
+        const translator = await Translator.create({
+          ...options,
+          monitor(m) { m.addEventListener('downloadprogress', (e) => onProgress?.(e.loaded)); },
+        });
+        ready.set(src, translator);
+        return translator;
+      })();
+      promise.catch(() => pending.delete(src));
+      pending.set(src, promise);
+    }
+    return pending.get(src);
+  }
+  return {
+    available: () => Boolean(scope.Translator),
+    ready: (src) => ready.has(src),
+    prepare: (src) => get(src),
+    async translate(text, src) {
+      try {
+        const translator = ready.get(src) || (await within(get(src), waitMs, 'loading'));
+        return await within(translator.translate(text), translateMs, 'failed');
+      } catch (err) {
+        throw err instanceof TranslateError ? err : new TranslateError('failed', String(err?.message || err));
+      }
+    },
+  };
+}
+
+function createTranslator({ engine = 'auto', googleKey = '', fetchImpl, scope = globalThis, now = Date.now, onProgress, deviceWaitMs = DEVICE_WAIT_MS, deviceTranslateMs = DEVICE_TRANSLATE_MS } = {}) {
+  const doFetch = fetchImpl || ((...args) => scope.fetch(...args));
+  const device = createDeviceEngine(scope, { onProgress, waitMs: deviceWaitMs, translateMs: deviceTranslateMs });
+  const cache = new Map();
+  const pausedUntil = new Map();
+  let options = { engine, googleKey };
+  let active = '';
+
+  function chain() {
+    if (options.engine !== 'auto') return [options.engine];
+    return [device.available() && 'device', options.googleKey && 'google', 'mymemory'].filter(Boolean);
+  }
+
+  // Device translators depend on the language pair, the others don't.
+  const pauseKey = (name, src) => (name === 'device' ? `device:${src}` : name);
+
+  function run(name, text, src) {
+    if (name === 'device') return device.translate(text, src);
+    if (name === 'google') return googleTranslate(doFetch, options.googleKey, text, src);
+    if (name === 'mymemory') return splitForLimit(text).reduce(async (acc, part) => `${await acc} ${await myMemoryTranslate(doFetch, part, src)}`.trim(), '');
+    throw new TranslateError('unsupported', `unknown engine ${name}`);
+  }
+
+  return {
+    setOptions(next) {
+      options = { ...options, ...next };
+      pausedUntil.clear();
+    },
+    // Call from a click: Chrome only downloads its on-device model while the user is interacting.
+    prepare(src) {
+      if (options.engine === 'auto' || options.engine === 'device') device.prepare(src).catch(() => {});
+    },
+    get active() { return active; },
+    async translate(text, src) {
+      text = text.trim();
+      if (!text) return '';
+      const key = `${src}|${text}`;
+      if (cache.has(key)) return cache.get(key);
+      let last = new TranslateError('unsupported', 'no translation engine available');
+      for (const name of chain()) {
+        const paused = (pausedUntil.get(pauseKey(name, src)) || 0) > now();
+        if (paused && !(name === 'device' && device.ready(src))) continue;
+        try {
+          const out = (await run(name, text, src)).trim();
+          active = name;
+          cache.set(key, out);
+          if (cache.size > CACHE_LIMIT) cache.delete(cache.keys().next().value);
+          return out;
+        } catch (err) {
+          last = err instanceof TranslateError ? err : new TranslateError('failed', String(err?.message || err));
+          if (PERMANENT.has(last.kind)) pausedUntil.set(pauseKey(name, src), now() + PAUSE_MS);
+          else if (last.kind === 'loading') pausedUntil.set(pauseKey(name, src), now() + LOADING_PAUSE_MS);
+        }
+      }
+      throw last;
+    },
+  };
+}
+
+// Live speech recognition. Wraps the browser's Web Speech API so it keeps listening:
+// browsers end a session after every pause, so this restarts it, de-duplicates the
+// results some Android versions repeat, and reports problems as simple error codes.
+
+function speechSupported(scope = globalThis) {
+  return Boolean(scope.SpeechRecognition || scope.webkitSpeechRecognition);
+}
+
+const FATAL = new Set(['not-allowed', 'service-not-allowed', 'audio-capture', 'language-not-supported']);
+const QUICK_END_MS = 1500;
+const MAX_QUICK_ENDS = 6;
+const MAX_NETWORK_ERRORS = 3;
+
+function createRecognizer({ scope = globalThis, lang = 'en-US', onInterim, onFinal, onState, onError, setTimer = setTimeout, clearTimer = clearTimeout, now = Date.now }) {
+  const Recognition = scope.SpeechRecognition || scope.webkitSpeechRecognition;
+  let rec = null;
+  let wanted = false;
+  let restartTimer = null;
+  let startedAt = 0;
+  let quickEnds = 0;
+  let networkErrors = 0;
+  let interimText = '';
+  let committed = new Map();
+
+  function spawn() {
+    const me = new Recognition();
+    const sessionLang = lang; // results are reported with the language they were spoken in, even if the user switches meanwhile
+    rec = me;
+    committed = new Map();
+    interimText = '';
+    me.continuous = true;
+    me.interimResults = true;
+    me.maxAlternatives = 1;
+    me.lang = lang;
+
+    me.onstart = () => {
+      if (me === rec) onState?.('listening');
+    };
+
+    me.onresult = (event) => {
+      if (me !== rec) return;
+      quickEnds = 0;
+      networkErrors = 0;
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const text = (result[0]?.transcript || '').trim();
+        if (result.isFinal) {
+          // Some Android versions re-deliver finals that were already handled.
+          if (text && committed.get(i) !== text) {
+            committed.set(i, text);
+            onFinal?.(text, sessionLang);
+          }
+        } else {
+          committed.delete(i);
+          if (text) interim += (interim ? ' ' : '') + text;
+        }
+      }
+      interimText = interim;
+      onInterim?.(interim, sessionLang);
+    };
+
+    me.onerror = (event) => {
+      if (me !== rec) return;
+      const code = event.error;
+      if (FATAL.has(code)) {
+        wanted = false;
+        onError?.(code);
+      } else if (code === 'network' && ++networkErrors >= MAX_NETWORK_ERRORS) {
+        wanted = false;
+        onError?.('network');
+      }
+      // 'no-speech' and 'aborted' are normal; the end handler restarts the session.
+    };
+
+    me.onend = () => {
+      if (me !== rec) return;
+      rec = null;
+      if (interimText) {
+        // The session ended before the browser finalised the last words: keep them.
+        const left = interimText;
+        interimText = '';
+        onInterim?.('', sessionLang);
+        onFinal?.(left, sessionLang);
+      }
+      if (!wanted) {
+        onState?.('idle');
+        return;
+      }
+      quickEnds = now() - startedAt < QUICK_END_MS ? quickEnds + 1 : 0;
+      if (quickEnds >= MAX_QUICK_ENDS) {
+        wanted = false;
+        onState?.('idle');
+        onError?.('unstable');
+        return;
+      }
+      restartTimer = setTimer(() => {
+        restartTimer = null;
+        if (wanted) spawn();
+      }, quickEnds ? Math.min(250 * quickEnds, 1500) : 150);
+    };
+
+    startedAt = now();
+    try {
+      me.start();
+    } catch {
+      // Already started: the existing session carries on.
+    }
+  }
+
+  return {
+    start() {
+      if (wanted) return;
+      wanted = true;
+      quickEnds = 0;
+      networkErrors = 0;
+      if (!rec && !restartTimer) spawn();
+    },
+    stop() {
+      wanted = false;
+      if (restartTimer) {
+        clearTimer(restartTimer);
+        restartTimer = null;
+      }
+      if (rec) {
+        try { rec.stop(); } catch { /* already stopped */ }
+      } else {
+        onState?.('idle');
+      }
+    },
+    // Switching language ends the current session; the end handler starts a new one in the new language.
+    setLang(next) {
+      if (next === lang) return;
+      lang = next;
+      if (rec) {
+        try { rec.stop(); } catch { /* already stopped */ }
+      }
+    },
+    // After the page was in the background the browser may have dropped the session.
+    resume() {
+      if (wanted && !rec && !restartTimer) spawn();
+    },
+    get listening() { return wanted; },
+  };
+}
+
+// The subtitle model: finished lines (original + Hebrew) and the line being spoken right now.
+// It knows nothing about the page; app.js renders whatever it reports through `onChange`.
+
+const clean = (text) => (text || '').replace(/\s+/g, ' ').trim();
+
+function createCaptions({ translate, getLang, isLive = () => false, onChange, onError, delay = 700, maxLines = 1000, setTimer = setTimeout, clearTimer = clearTimeout }) {
+  let lines = [];
+  let nextId = 1;
+  let interim = { src: '', he: '' };
+  let interimSeq = 0;
+  let timer = null;
+
+  const emit = () => onChange?.({ lines, interim });
+
+  function cancelPending() {
+    interimSeq++;
+    if (timer) {
+      clearTimer(timer);
+      timer = null;
+    }
+  }
+
+  return {
+    // What is being said right now; translated (debounced) only when `isLive()`. `lang` defaults to the selected language.
+    setInterim(text, lang = getLang()) {
+      text = clean(text);
+      if (text === interim.src) return;
+      cancelPending();
+      interim = { src: text, he: text ? interim.he : '' };
+      emit();
+      if (!text || !isLive()) return;
+      const seq = interimSeq;
+      timer = setTimer(async () => {
+        timer = null;
+        try {
+          const he = await translate(text, lang);
+          if (seq === interimSeq) {
+            interim = { src: text, he };
+            emit();
+          }
+        } catch (err) {
+          if (seq === interimSeq) onError?.(err);
+        }
+      }, delay);
+    },
+
+    // A finished sentence: it becomes a line and is translated straight away.
+    commit(text, lang = getLang()) {
+      text = clean(text);
+      if (!text) return;
+      cancelPending();
+      interim = { src: '', he: '' };
+      const line = { id: nextId++, lang, src: text, he: '', status: 'pending' };
+      lines = [...lines, line].slice(-maxLines);
+      emit();
+      translate(text, lang).then(
+        (he) => {
+          line.he = he;
+          line.status = 'done';
+          emit();
+        },
+        (err) => {
+          line.status = 'error';
+          emit();
+          onError?.(err);
+        },
+      );
+    },
+
+    clear() {
+      cancelPending();
+      lines = [];
+      interim = { src: '', he: '' };
+      emit();
+    },
+
+    get lines() { return lines; },
+    get interim() { return interim; },
+  };
+}
+
+// Plain text for copying or saving: Hebrew first, the original in brackets underneath.
+function toTranscript(lines, { withOriginal = true } = {}) {
+  return lines
+    .map((line) => {
+      const hebrew = line.status === 'done' && line.he ? line.he : line.src;
+      return withOriginal && hebrew !== line.src ? `${hebrew}\n(${line.src})` : hebrew;
+    })
+    .join('\n\n');
+}
+
+// Page wiring: microphone -> speech recognition -> translation -> big Hebrew subtitles.
+
+const $ = (id) => document.getElementById(id);
+const STORE = 'live-subtitles:v1';
+const DEFAULTS = { lang: DEFAULT_LANGUAGE, size: 36, orig: true, engine: 'auto', key: '', live: false };
+const SIZE_MIN = 20;
+const SIZE_MAX = 72;
+const SIZE_STEP = 4;
+const VISIBLE_LINES = 6;
+const NOTICE_REPEAT_MS = 15000;
+
+// Latin names inside Hebrew sentences need isolating, or the punctuation around them jumps to the wrong side.
+const ltr = (name) => `\u2068${name}\u2069`;
+
+const SPEECH_ERRORS = {
+  unsupported: `הדפדפן הזה לא תומך בזיהוי דיבור. ב-${ltr('Android')} כדאי להשתמש ב-${ltr('Chrome')}, וב-${ltr('iPhone')} ב-${ltr('Safari')}.`,
+  'not-allowed': 'אין הרשאה למיקרופון. אשרו גישה למיקרופון בהגדרות הדפדפן ונסו שוב.',
+  'service-not-allowed': 'אין הרשאה למיקרופון. אשרו גישה למיקרופון בהגדרות הדפדפן ונסו שוב.',
+  'audio-capture': 'לא נמצא מיקרופון במכשיר.',
+  'language-not-supported': 'שפת הדיבור הזו לא נתמכת בדפדפן. נסו שפה אחרת.',
+  network: 'זיהוי הדיבור צריך חיבור לאינטרנט. בדקו את החיבור ונסו שוב.',
+  unstable: 'זיהוי הדיבור נעצר שוב ושוב. נסו להפעיל מחדש, או לסגור אפליקציות אחרות שמשתמשות במיקרופון.',
+};
+const TRANSLATE_ERRORS = {
+  quota: `נגמרה המכסה של שירות התרגום להיום, ולכן מוצג הטקסט המקורי. אפשר להוסיף מפתח ${ltr('Google')} בהגדרות.`,
+  auth: `מפתח ${ltr('Google')} לא תקין או לא מורשה לאתר הזה. בדקו אותו בהגדרות.`,
+  unsupported: 'התרגום במכשיר לא זמין בדפדפן הזה. בחרו מנוע תרגום אחר בהגדרות.',
+  loading: 'מודל התרגום במכשיר עדיין נטען, וזה יכול לקחת כמה דקות. בינתיים מוצג הטקסט המקורי.',
+  network: 'אין חיבור לשירות התרגום, ולכן מוצג הטקסט המקורי.',
+  failed: 'התרגום נכשל כרגע, ולכן מוצג הטקסט המקורי.',
+};
+
+// Shown by the "demo" button so the look can be seen without a microphone or a network.
+const DEMO = [
+  ['Hi everyone, welcome to the show.', 'שלום לכולם, ברוכים הבאים לתוכנית.'],
+  ["Today we're going to talk about building an app in a single afternoon.", 'היום נדבר על בניית אפליקציה בתוך אחר צהריים אחד.'],
+  ['The subtitles appear here as soon as someone speaks.', 'הכתוביות מופיעות כאן ברגע שמישהו מדבר.'],
+  ['You can change the language at the top and make the text bigger.', 'אפשר להחליף שפה למעלה ולהגדיל את הטקסט.'],
+];
+const demoText = new Map(DEMO);
+
+function loadSettings() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch { /* private mode: defaults */ }
+  const s = { ...DEFAULTS, ...saved };
+  s.lang = findLanguage(s.lang).code;
+  s.size = Math.min(SIZE_MAX, Math.max(SIZE_MIN, Number(s.size) || DEFAULTS.size));
+  return s;
+}
+function saveSettings() {
+  try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch { /* not saved */ }
+}
+
+const settings = loadSettings();
+const els = Object.fromEntries(
+  ['lang', 'status', 'status-text', 'empty', 'lines', 'live', 'notice', 'notice-text', 'notice-close', 'btn-mic', 'btn-smaller', 'btn-bigger', 'btn-orig',
+    'btn-transcript', 'btn-settings', 'btn-demo', 'btn-clear', 'btn-copy', 'btn-save', 'dlg-settings', 'dlg-transcript', 'transcript', 'set-engine', 'set-key', 'set-orig', 'set-live']
+    .map((id) => [id, $(id)]),
+);
+
+let running = false;
+let demoToken = 0;
+const demoOn = () => demoToken !== 0;
+
+const translator = createTranslator({ engine: settings.engine, googleKey: settings.key.trim() });
+const captions = createCaptions({
+  translate: (text, lang) => (demoOn() ? Promise.resolve(demoText.get(text) ?? text) : translator.translate(text, lang)),
+  getLang: () => settings.lang,
+  isLive: () => !demoOn() && (settings.live || translator.active === 'device'),
+  onChange: render,
+  onError: (err) => notice(TRANSLATE_ERRORS[err.kind] || TRANSLATE_ERRORS.failed, true),
+});
+
+const codeOfTag = (tag) => (LANGUAGES.find((l) => l.speech === tag) || findLanguage(settings.lang)).code;
+
+const recognizer = speechSupported()
+  ? createRecognizer({
+      lang: findLanguage(settings.lang).speech,
+      onInterim: (text, tag) => captions.setInterim(text, codeOfTag(tag)),
+      onFinal: (text, tag) => captions.commit(text, codeOfTag(tag)),
+      onState: (state) => {
+        running = state === 'listening';
+        if (!running) unlockScreen();
+        updateControls();
+      },
+      onError: (code) => notice(SPEECH_ERRORS[code] || SPEECH_ERRORS.unstable),
+    })
+  : null;
+
+/* ---------- rendering ---------- */
+
+function sourceSpan(text, lang, cls) {
+  const span = document.createElement('span');
+  span.className = cls;
+  span.dir = 'auto';
+  if (lang) span.lang = lang;
+  span.textContent = text;
+  return span;
+}
+
+function hebrewSpan(text) {
+  const span = document.createElement('span');
+  span.className = 'he';
+  span.dir = 'rtl';
+  span.textContent = text;
+  return span;
+}
+
+function lineElement(line) {
+  const p = document.createElement('p');
+  p.className = `line ${line.status === 'pending' ? 'pending' : line.status === 'error' ? 'failed' : ''}`.trim();
+  if (line.status === 'done') {
+    p.append(hebrewSpan(line.he));
+    if (settings.orig) p.append(sourceSpan(line.src, line.lang, 'orig'));
+  } else {
+    p.append(sourceSpan(line.src, line.lang, 'he src-only'));
+  }
+  return p;
+}
+
+function render({ lines, interim }) {
+  els.lines.replaceChildren(...lines.slice(-VISIBLE_LINES).map(lineElement));
+
+  const liveVisible = Boolean(interim.src) || (running && lines.length === 0) || (demoOn() && lines.length === 0);
+  els.live.hidden = !liveVisible;
+  els.live.classList.toggle('wait', Boolean(interim.he));
+  if (interim.src && interim.he) {
+    els.live.replaceChildren(hebrewSpan(interim.he), ...(settings.orig ? [sourceSpan(interim.src, settings.lang, 'orig')] : []));
+  } else if (interim.src) {
+    els.live.replaceChildren(sourceSpan(interim.src, settings.lang, 'he src-only'));
+  } else if (liveVisible) {
+    const hint = document.createElement('span');
+    hint.className = 'listening-hint';
+    hint.textContent = 'מקשיב… אפשר להתחיל לדבר';
+    els.live.replaceChildren(hint);
+  }
+
+  const kids = [...els.lines.children];
+  kids.forEach((kid, i) => kid.classList.toggle('dim', liveVisible || i < kids.length - 1));
+  els.empty.hidden = lines.length > 0 || liveVisible || running || demoOn();
+}
+
+function updateControls() {
+  const active = running || demoOn();
+  els['btn-mic'].setAttribute('aria-pressed', String(active));
+  els['btn-mic'].setAttribute('aria-label', active ? 'עצירה' : 'התחלת האזנה');
+  const state = demoOn() ? 'demo' : running ? 'listening' : 'idle';
+  els.status.dataset.state = state;
+  els['status-text'].textContent = { demo: 'הדגמה', listening: 'מאזין', idle: 'מוכן' }[state];
+  els['btn-smaller'].disabled = settings.size <= SIZE_MIN;
+  els['btn-bigger'].disabled = settings.size >= SIZE_MAX;
+  els['btn-orig'].setAttribute('aria-pressed', String(settings.orig));
+  render({ lines: captions.lines, interim: captions.interim });
+}
+
+function applySize() {
+  document.documentElement.style.setProperty('--fs', `${settings.size}px`);
+  updateControls();
+}
+
+/* ---------- notices ---------- */
+
+const shownAt = new Map();
+function notice(text, throttle = false) {
+  const now = Date.now();
+  if (throttle && now - (shownAt.get(text) || 0) < NOTICE_REPEAT_MS) return;
+  shownAt.set(text, now);
+  els['notice-text'].textContent = text;
+  els.notice.hidden = false;
+}
+const hideNotice = () => { els.notice.hidden = true; };
+
+/* ---------- keep the screen on while listening ---------- */
+
+let wakeLock = null;
+async function lockScreen() {
+  try {
+    wakeLock = await navigator.wakeLock?.request('screen');
+    wakeLock?.addEventListener('release', () => { wakeLock = null; });
+  } catch { /* not allowed or not supported: the screen may dim */ }
+}
+function unlockScreen() {
+  wakeLock?.release().catch(() => {});
+  wakeLock = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !running) return;
+  lockScreen();
+  recognizer?.resume();
+});
+
+/* ---------- start, stop, demo ---------- */
+
+function syncTranslator() {
+  translator.setOptions({ engine: settings.engine, googleKey: settings.key.trim() });
+}
+
+function start() {
+  if (!recognizer) {
+    notice(SPEECH_ERRORS.unsupported);
+    return;
+  }
+  stopDemo();
+  hideNotice();
+  syncTranslator();
+  translator.prepare(settings.lang); // inside the tap, so Chrome may download its translation model
+  recognizer.setLang(findLanguage(settings.lang).speech);
+  recognizer.start();
+  running = true;
+  lockScreen();
+  updateControls();
+}
+
+function stop() {
+  recognizer?.stop();
+  captions.setInterim('');
+  running = false;
+  unlockScreen();
+  updateControls();
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function runDemo(token) {
+  while (demoToken === token) {
+    for (const [text] of DEMO) {
+      const words = text.split(' ');
+      for (let i = 1; i <= words.length; i++) {
+        if (demoToken !== token) return;
+        captions.setInterim(words.slice(0, i).join(' '));
+        await sleep(230);
+      }
+      await sleep(350);
+      if (demoToken !== token) return;
+      captions.commit(text);
+      await sleep(1700);
+    }
+  }
+}
+
+function startDemo() {
+  if (running) stop();
+  hideNotice();
+  captions.clear();
+  demoToken = Date.now();
+  updateControls();
+  runDemo(demoToken);
+}
+
+function stopDemo() {
+  if (!demoOn()) return;
+  demoToken = 0;
+  captions.clear();
+  updateControls();
+}
+
+/* ---------- transcript ---------- */
+
+function openTranscript() {
+  const box = els.transcript;
+  const lines = captions.lines;
+  if (!lines.length) {
+    const note = document.createElement('p');
+    note.className = 'empty-note';
+    note.textContent = 'עוד אין כתוביות. אחרי שמישהו ידבר, התמלול המלא יופיע כאן.';
+    box.replaceChildren(note);
+  } else {
+    box.replaceChildren(...lines.map((line) => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      const done = line.status === 'done';
+      item.append(done ? hebrewSpan(line.he) : sourceSpan(line.src, line.lang, 'he'));
+      if (done) item.append(document.createElement('br'), sourceSpan(line.src, line.lang, 'orig'));
+      return item;
+    }));
+    box.scrollTop = box.scrollHeight;
+  }
+  els['dlg-transcript'].showModal();
+}
+
+async function copyTranscript() {
+  const text = toTranscript(captions.lines);
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const area = document.createElement('textarea');
+    area.value = text;
+    document.body.append(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+  }
+  els['btn-copy'].textContent = 'הועתק ✓';
+  setTimeout(() => { els['btn-copy'].textContent = 'העתקה'; }, 1800);
+}
+
+function saveTranscript() {
+  const text = toTranscript(captions.lines);
+  if (!text) return;
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([`﻿${text}\n`], { type: 'text/plain;charset=utf-8' }));
+  link.download = `subtitles-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.txt`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+/* ---------- events ---------- */
+
+for (const l of LANGUAGES) {
+  const option = document.createElement('option');
+  option.value = l.code;
+  option.textContent = `${l.he} · ${l.native}`;
+  els.lang.append(option);
+}
+els.lang.value = settings.lang;
+els.lang.addEventListener('change', () => {
+  settings.lang = els.lang.value;
+  saveSettings();
+  captions.setInterim('');
+  if (running) {
+    translator.prepare(settings.lang);
+    recognizer.setLang(findLanguage(settings.lang).speech);
+  }
+});
+
+els['btn-mic'].addEventListener('click', () => (demoOn() ? stopDemo() : running ? stop() : start()));
+els['btn-demo'].addEventListener('click', startDemo);
+els['notice-close'].addEventListener('click', hideNotice);
+els['btn-smaller'].addEventListener('click', () => { settings.size = Math.max(SIZE_MIN, settings.size - SIZE_STEP); saveSettings(); applySize(); });
+els['btn-bigger'].addEventListener('click', () => { settings.size = Math.min(SIZE_MAX, settings.size + SIZE_STEP); saveSettings(); applySize(); });
+els['btn-orig'].addEventListener('click', () => { settings.orig = !settings.orig; els['set-orig'].checked = settings.orig; saveSettings(); updateControls(); });
+els['btn-transcript'].addEventListener('click', openTranscript);
+els['btn-copy'].addEventListener('click', copyTranscript);
+els['btn-save'].addEventListener('click', saveTranscript);
+els['btn-settings'].addEventListener('click', () => els['dlg-settings'].showModal());
+els['btn-clear'].addEventListener('click', () => { captions.clear(); els['dlg-settings'].close(); });
+
+els['set-engine'].value = settings.engine;
+els['set-key'].value = settings.key;
+els['set-orig'].checked = settings.orig;
+els['set-live'].checked = settings.live;
+els['set-engine'].addEventListener('change', () => { settings.engine = els['set-engine'].value; saveSettings(); syncTranslator(); });
+els['set-key'].addEventListener('change', () => { settings.key = els['set-key'].value.trim(); saveSettings(); syncTranslator(); });
+els['set-orig'].addEventListener('change', () => { settings.orig = els['set-orig'].checked; saveSettings(); updateControls(); });
+els['set-live'].addEventListener('change', () => { settings.live = els['set-live'].checked; saveSettings(); });
+
+for (const dialog of [els['dlg-settings'], els['dlg-transcript']]) {
+  dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }); // tap outside the sheet
+}
+
+applySize();
+
+// Only exists on https and localhost, which is also where the microphone works.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMjU2M2ViIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzA4OTFiMiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9InVybCgjYmcpIi8+CiAgPHBhdGggZD0iTTEzNiAxMjBoMjQwYTQwIDQwIDAgMCAxIDQwIDQwdjEzMGE0MCA0MCAwIDAgMS00MCA0MEgyNjJsLTcyIDYydi02MmgtNTRhNDAgNDAgMCAwIDEtNDAtNDBWMTYwYTQwIDQwIDAgMCAxIDQwLTQwWiIgZmlsbD0iI2ZmZiIvPgogIDxyZWN0IHg9IjEzNiIgeT0iMTkyIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI2IiByeD0iMTMiIGZpbGw9IiMwZjJhNWMiLz4KICA8cmVjdCB4PSIxNzYiIHk9IjI0NCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIyNiIgcng9IjEzIiBmaWxsPSIjMGYyYTVjIi8+Cjwvc3ZnPgo=" alt="" width="28" height="28"><span>כתוביות חיות</span></div>
+  <label class="lang-pick">
+    <span class="sr-only">שפת הדיבור</span>
+    <select id="lang" class="pill"></select>
+  </label>
+  <button type="button" class="tool" id="btn-settings" aria-label="הגדרות">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.4a.5.5 0 0 0-.6-.2l-2.5 1a7.4 7.4 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.4a.5.5 0 0 0 .1.6L4.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.4c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.4a.5.5 0 0 0-.1-.6L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
+  </button>
+</header>
+
+<main class="stage" id="stage">
+  <div class="status" id="status" role="status" data-state="idle"><i aria-hidden="true"></i><span id="status-text">מוכן</span></div>
+
+  <section class="empty" id="empty">
+    <h1>כתוביות בעברית, בזמן אמת</h1>
+    <p>לוחצים על המיקרופון ומקרבים את הטלפון למי שמדבר. הכתוביות מופיעות כאן תוך שניות.</p>
+    <p class="hint">קודם בוחרים למעלה באיזו שפה מדברים.</p>
+    <button type="button" class="link" id="btn-demo">רוצים לראות איך זה נראה? הדגמה</button>
+  </section>
+
+  <div class="lines" id="lines" aria-live="polite" aria-relevant="additions"></div>
+  <div class="line live" id="live" aria-live="off" hidden></div>
+</main>
+
+<div class="notice" id="notice" role="alert" hidden>
+  <span id="notice-text"></span>
+  <button type="button" class="notice-close" id="notice-close" aria-label="סגירת ההודעה">✕</button>
+</div>
+
+<footer class="controls">
+  <div class="group">
+    <button type="button" class="tool" id="btn-smaller" dir="ltr" aria-label="הקטנת הכתוביות">A−</button>
+    <button type="button" class="tool" id="btn-bigger" dir="ltr" aria-label="הגדלת הכתוביות">A+</button>
+  </div>
+  <button type="button" class="mic" id="btn-mic" aria-pressed="false" aria-label="התחלת האזנה">
+    <svg class="i-mic" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path fill="currentColor" d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4Zm6-4a1 1 0 1 1 2 0 8 8 0 0 1-7 7.9V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.1A8 8 0 0 1 4 11a1 1 0 1 1 2 0 6 6 0 0 0 12 0Z"/></svg>
+    <svg class="i-stop" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor"/></svg>
+  </button>
+  <div class="group end">
+    <button type="button" class="tool wide" id="btn-orig" aria-pressed="true">מקור</button>
+    <button type="button" class="tool wide" id="btn-transcript">תמלול</button>
+  </div>
+</footer>
+
+<dialog id="dlg-settings">
+  <form method="dialog" class="sheet">
+    <h2>הגדרות</h2>
+
+    <label class="field">
+      <span>מנוע התרגום</span>
+      <select id="set-engine" class="pill">
+        <option value="auto">אוטומטי (מומלץ)</option>
+        <option value="device">במכשיר (⁨Chrome⁩ בלבד, פרטי וחינמי)</option>
+        <option value="google">⁨Google Cloud⁩ (עם מפתח)</option>
+        <option value="mymemory">חינמי, ⁨MyMemory⁩ (מכסה יומית קטנה)</option>
+      </select>
+    </label>
+
+    <label class="field">
+      <span>מפתח Google Cloud Translation <small>(אופציונלי)</small></span>
+      <input id="set-key" class="pill" type="password" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza…">
+      <small>נשמר רק בטלפון הזה, ונשלח רק ל-<bdi>Google</bdi>. כדאי להגביל אותו בקונסולה לכתובת של האתר ולשירות <bdi>Cloud Translation</bdi>.</small>
+    </label>
+
+    <label class="check"><input type="checkbox" id="set-orig"><span>להציג מתחת לכל כתובית גם את הטקסט המקורי</span></label>
+    <label class="check"><input type="checkbox" id="set-live"><span>תרגום מהיר תוך כדי דיבור <small>באינטרנט זה צורך הרבה יותר מהמכסה. בתרגום שבמכשיר זה פועל תמיד.</small></span></label>
+
+    <p class="privacy"><b>פרטיות:</b> אין שרת של האפליקציה ושום דבר לא נשמר אצלנו. הקול נשלח לשירות זיהוי הדיבור של הדפדפן (<bdi>Google</bdi> ב-<bdi>Chrome</bdi>, <bdi>Apple</bdi> ב-<bdi>Safari</bdi>), והטקסט נשלח לשירות התרגום שנבחר, אלא אם התרגום מתבצע במכשיר.</p>
+
+    <div class="row">
+      <button type="button" class="btn ghost" id="btn-clear">מחיקת הכתוביות</button>
+      <button class="btn" value="close">סגירה</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-transcript">
+  <form method="dialog" class="sheet">
+    <h2>תמלול</h2>
+    <div class="transcript" id="transcript" tabindex="0"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="btn-copy">העתקה</button>
+      <button type="button" class="btn ghost" id="btn-save">שמירה כקובץ</button>
+      <button class="btn" value="close">סגירה</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>
