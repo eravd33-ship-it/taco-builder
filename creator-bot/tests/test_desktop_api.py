@@ -119,7 +119,7 @@ async def test_settings(make_desk):
     desk = make_desk()
     settings = await desk.ok("GET", "/api/settings")
     assert (settings["morning"], settings["evening"], settings["os_notifications"]) == ("09:00", "20:30", True)
-    assert not settings["youtube"] and not settings["drive"]
+    assert not settings["youtube"] and "drive" not in settings
 
     updated = await desk.ok("PUT", "/api/settings", {"morning": "07:45", "os_notifications": False, "autostart": True})
     assert updated["morning"] == "07:45" and not updated["os_notifications"] and updated["autostart"]
@@ -158,16 +158,24 @@ async def test_test_notification_reports_whether_the_os_showed_it(make_desk):
 
 async def test_open_link_allows_only_known_https_hosts(make_desk):
     desk = make_desk()
-    await desk.ok("POST", "/api/open", {"url": "https://drive.google.com/drive/folders/abc"})
-    for bad in ("http://drive.google.com/x", "https://evil.example/x", "file:///etc/passwd", "javascript:alert(1)", ""):
+    await desk.ok("POST", "/api/open", {"url": "https://www.youtube.com/@abc"})
+    for bad in (
+        "http://www.youtube.com/x",
+        "https://drive.google.com/x",
+        "https://evil.example/x",
+        "file:///etc/passwd",
+        "javascript:alert(1)",
+        "",
+    ):
         assert (await desk.call("POST", "/api/open", {"url": bad}))[0] == 400
-    assert desk.opened == ["https://drive.google.com/drive/folders/abc"]
+    assert desk.opened == ["https://www.youtube.com/@abc"]
 
 
 async def test_optional_integrations_report_not_configured(make_desk):
     desk = make_desk()
     assert (await desk.call("POST", "/api/stats/refresh"))[0] == 404
-    assert (await desk.call("POST", "/api/drive/backup"))[0] == 404
+    assert (await desk.call("POST", "/api/drive/backup"))[0] == 404  # Drive is gone for good
+    assert (await desk.call("GET", "/api/google"))[0] == 404  # ...and so is the Google sign-in
     assert (await desk.ok("GET", "/api/today"))["channel"] is None
 
 

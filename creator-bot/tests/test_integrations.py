@@ -1,14 +1,10 @@
-"""YouTube and Google Drive modules, with the network replaced by httpx.MockTransport."""
+"""The YouTube stats module, with the network replaced by httpx.MockTransport."""
 
-import json
 from datetime import timedelta
 
 import httpx
-import pytest
 
-from creator_bot.modules.drive import DriveModule
 from creator_bot.modules.motivation import MotivationModule
-from creator_bot.modules.videos import VideosModule
 from creator_bot.modules.youtube_stats import YouTubeStatsModule
 
 from .conftest import TODAY
@@ -60,84 +56,3 @@ async def test_views_goal_progress(make_core, monkeypatch):
     core.db.set("motivation.views_per_month", 10_000)
     section = await core.get("motivation").morning_section(TODAY)
     assert "2,500/10,000" in section.text and "25%" in section.text
-
-
-class FakeDrive:
-    """In-memory imitation of the Drive REST endpoints the bot uses."""
-
-    def __init__(self):
-        self.token_calls = 0
-        self.folders = {}
-        self.files = {}
-        self.patches = []
-
-    def __call__(self, request: httpx.Request) -> httpx.Response:
-        path = request.url.path
-        if request.url.host == "oauth2.googleapis.com":
-            self.token_calls += 1
-            return httpx.Response(200, json={"access_token": "token", "expires_in": 3600})
-        assert request.headers["Authorization"] == "Bearer token"
-        if request.method == "POST" and path == "/drive/v3/files":
-            body = json.loads(request.content)
-            parent = (body.get("parents") or [None])[0]
-            if parent and parent not in self.folders:
-                return httpx.Response(404, json={"error": "parent not found"})
-            new_id = f"id{len(self.folders) + len(self.files) + 1}"
-            if body.get("mimeType") == "application/vnd.google-apps.folder":
-                self.folders[new_id] = (body["name"], parent)
-                return httpx.Response(200, json={"id": new_id, "webViewLink": f"https://drive.test/{new_id}"})
-            self.files[new_id] = body["name"]
-            return httpx.Response(200, json={"id": new_id})
-        if request.method == "PATCH" and path.startswith("/upload/drive/v3/files/"):
-            file_id = path.rsplit("/", 1)[-1]
-            if file_id not in self.files:
-                return httpx.Response(404, json={"error": "file not found"})
-            self.patches.append((file_id, request.content))
-            return httpx.Response(200, json={"id": file_id})
-        return httpx.Response(400)
-
-
-@pytest.fixture
-def drive(monkeypatch):
-    fake = FakeDrive()
-    monkeypatch.setattr(DriveModule, "client_transport", httpx.MockTransport(fake))
-    return fake
-
-
-GOOGLE = {"google_client_id": "id", "google_client_secret": "secret", "google_refresh_token": "refresh"}
-
-
-async def test_drive_folder_per_video(make_core, drive):
-    core = make_core([VideosModule, DriveModule], **GOOGLE)
-    video = core.get("videos").service.create("טיול בצפון", TODAY + timedelta(days=7), TODAY)
-    await core.events.emit("video.created", video=video, idea_id=None)
-
-    names = [name for name, _ in drive.folders.values()]
-    assert names[:3] == ["🎬 YouTube – Creator Bot", "סרטונים", "גיבויים"]
-    assert "2026-10-20 · טיול בצפון" in names
-    assert {"חומרי גלם", "עריכה", "תמונה ממוזערת"} <= set(names)
-    assert "https://drive.test/" in core.bot.sent[-1]
-    assert drive.token_calls == 1  # the access token is reused
-
-    # the user deleted the bot's folder in Drive: it is recreated instead of failing
-    drive.folders.clear()
-    other = core.get("videos").service.create("עוד סרטון", TODAY + timedelta(days=9), TODAY)
-    await core.events.emit("video.created", video=other, idea_id=None)
-    assert "2026-10-22 · עוד סרטון" in [name for name, _ in drive.folders.values()]
-
-
-async def test_drive_backup_rotates_and_recovers(make_core, drive):
-    core = make_core([DriveModule], **GOOGLE)
-    drive_module = core.get("drive")
-
-    await drive_module.backup(TODAY)
-    await drive_module.backup(TODAY)  # same weekday -> same file is overwritten
-    assert list(drive.files.values()) == ["creator-bot-backup-2.db"]
-    assert len(drive.patches) == 2 and drive.patches[0][1].startswith(b"SQLite format 3")
-
-    await drive_module.backup(TODAY + timedelta(days=1))
-    assert len(drive.files) == 2
-
-    drive.files.clear()  # backup files deleted by the user
-    await drive_module.backup(TODAY)
-    assert list(drive.files.values()) == ["creator-bot-backup-2.db"]

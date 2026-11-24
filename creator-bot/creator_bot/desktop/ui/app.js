@@ -380,7 +380,7 @@ const views = {
           toggle('os_notifications', 'התראות במערכת ההפעלה', 'חלון קופץ גם כשהאפליקציה ברקע', s.os_notifications),
           toggle('autostart', 'הפעלה אוטומטית עם המחשב', 'האפליקציה תיפתח ממוזערת כשנכנסים למחשב, כדי שהתזכורות תמיד יגיעו', s.autostart),
           h('div', null, testBtn)),
-        googleCard(),
+        youtubeCard(),
         assistantCard(),
         h('div', { class: 'card stack' }, h('h2', null, 'ℹ️ מידע'),
           h('div', { class: 'muted small' }, `גרסה ${s.version}`),
@@ -404,90 +404,62 @@ function twoStep(label, question, onConfirm) {
   return box;
 }
 
-/** Connecting to the user's Google account (YouTube stats + Drive) without touching any file. */
-function googleCard() {
+/** The YouTube channel: found by its name, with a free API key. No Google sign-in, nothing to approve. */
+function youtubeCard() {
   const box = h('div', { class: 'card stack' });
-  let poll = null;
-  const stopPolling = () => { if (poll) { clearInterval(poll); poll = null; } };
-
-  const startPolling = () => {
-    stopPolling();
-    const started = Date.now();
-    poll = setInterval(async () => {
-      if (!box.isConnected || Date.now() - started > 10 * 60 * 1000) { stopPolling(); return; }
-      try {
-        const g = await api('GET', '/api/google');
-        if (g.connected) { stopPolling(); toast('✅ התחברת לחשבון גוגל'); await draw(); pollFeed(); }
-        else if (!g.waiting) { stopPolling(); toast('החיבור לא הושלם. אפשר לנסות שוב.', 'error'); await draw(); }
-      } catch { /* the app may be closing */ }
-    }, 2000);
-  };
 
   const guide = (open) => h('details', { open },
-    h('summary', null, 'איך משיגים מזהה לקוח? (חד-פעמי, כ-5 דקות)'),
+    h('summary', null, 'איך משיגים מפתח? (חד-פעמי, כ-3 דקות, חינם)'),
     h('ol', { class: 'steps' },
       h('li', null, 'פותחים את ', externalLink('https://console.cloud.google.com/projectcreate', 'Google Cloud Console'), ' ויוצרים פרויקט חדש (שם חופשי).'),
-      h('li', null, 'מפעילים (', h('bdi', null, 'Enable'), ') את שני ה-API: ',
-        externalLink('https://console.cloud.google.com/apis/library/youtube.googleapis.com', 'YouTube Data API v3'), ' ו-',
-        externalLink('https://console.cloud.google.com/apis/library/drive.googleapis.com', 'Google Drive API'), '.'),
-      h('li', null, 'פותחים את ', externalLink('https://console.cloud.google.com/apis/credentials/consent', 'OAuth consent screen'),
-        ': בוחרים ', h('bdi', null, 'External'), ', ממלאים שם לאפליקציה ואת המייל שלך, ומוסיפים את המייל שלך גם כ-', h('bdi', null, 'Test user'), '.'),
+      h('li', null, 'מפעילים (', h('bdi', null, 'Enable'), ') את ', externalLink('https://console.cloud.google.com/apis/library/youtube.googleapis.com', 'YouTube Data API v3'), '.'),
       h('li', null, 'ב-', externalLink('https://console.cloud.google.com/apis/credentials', 'Credentials'), ' לוחצים ', h('bdi', null, 'Create credentials'),
-        ' ← ', h('bdi', null, 'OAuth client ID'), ', ובסוג האפליקציה בוחרים ', h('b', null, h('bdi', null, 'Desktop app')), '.'),
-      h('li', null, 'מעתיקים את ', h('bdi', null, 'Client ID'), ' ואת ', h('bdi', null, 'Client secret'), ' ומדביקים כאן.'),
+        ' ← ', h('bdi', null, 'API key'), ', מעתיקים את המפתח ומדביקים כאן.'),
     ),
-    h('p', { class: 'muted small' },
-      'טיפ: במסך ההסכמה לוחצים ', h('bdi', null, 'Publish app'), ', כדי שהחיבור לא יפוג אחרי 7 ימים. בכניסה תופיע אזהרה ',
-      h('bdi', null, "Google hasn't verified this app"), ': לוחצים ', h('bdi', null, 'Advanced'), ' ואז ', h('bdi', null, 'Go to …'),
-      '. זו האפליקציה שלך, והיא מבקשת רק לראות את נתוני הערוץ ולנהל קבצים שהיא עצמה יצרה.'));
+    h('p', { class: 'muted small' }, 'המפתח רק קורא נתונים ציבוריים של ערוצים. אין התחברות לחשבון גוגל ואין הרשאות לאשר.'));
 
-  const setup = (g) => {
-    const id = h('input', { class: 'field', value: g.client_id, dir: 'ltr', placeholder: '1234…apps.googleusercontent.com', required: true, autocomplete: 'off', 'aria-label': 'Client ID' });
-    const secret = h('input', { class: 'field', type: 'password', dir: 'ltr', placeholder: 'GOCSPX-…', required: true, autocomplete: 'off', 'aria-label': 'Client secret' });
-    const go = h('button', { class: 'btn primary', type: 'submit' }, '🔗 התחבר לגוגל');
+  const setup = (y) => {
+    const channel = h('input', { class: 'field', value: y.channel, dir: 'ltr', placeholder: '@MyChannel', required: true, autocomplete: 'off', 'aria-label': 'שם הערוץ' });
+    const key = h('input', { class: 'field', type: 'password', dir: 'ltr', placeholder: y.has_key ? 'המפתח שמור. אפשר להשאיר ריק' : 'AIza…', required: !y.has_key, autocomplete: 'off', 'aria-label': 'מפתח API של יוטיוב' });
+    const save = h('button', { class: 'btn primary', type: 'submit' }, 'שמור ובדוק');
     const form = h('form', { class: 'stack', onsubmit: async (e) => {
       e.preventDefault();
-      go.disabled = true;
+      save.disabled = true;
       try {
-        await api('POST', '/api/google/connect', { client_id: id.value, client_secret: secret.value });
-        toast('נפתח דפדפן לאישור. אחרי האישור חוזרים לכאן.');
-        startPolling();
+        await api('PUT', '/api/youtube', { channel: channel.value, api_key: key.value });
+        toast('✅ הערוץ מחובר');
         await draw();
+        pollFeed();
       } catch (error) {
         toast(error.message, 'error');
-        go.disabled = false;
+        save.disabled = false;
       }
-    } }, h('label', { class: 'labeled small' }, h('span', null, 'Client ID'), id), h('label', { class: 'labeled small' }, h('span', null, 'Client secret'), secret), h('div', null, go));
+    } },
+    h('label', { class: 'labeled small' }, h('span', null, 'שם הערוץ (השם שאחרי ה-@ בכתובת הערוץ)'), channel),
+    h('label', { class: 'labeled small' }, h('span', null, 'מפתח API'), key),
+    h('div', null, save));
     return [
-      h('p', { class: 'muted' }, 'כדי לראות כאן את נתוני הערוץ ולקבל תיקייה בדרייב לכל סרטון, מתחברים לחשבון הגוגל שלך. זה חינמי, והחיבור אפשר להסרה בכל רגע.'),
-      g.waiting
-        ? h('div', { class: 'note-box' }, '⏳ ממתין לאישור בדפדפן. אחרי שתאשר, החלון הזה יתעדכן לבד.')
-        : null,
-      guide(!g.has_client),
+      h('p', { class: 'muted' }, 'כדי לראות כאן את נתוני הערוץ, מזינים את שם הערוץ ומפתח API חינמי של יוטיוב.'),
+      guide(!y.has_key),
       form,
     ];
   };
 
-  const connected = () => [
-    h('p', null, '✅ מחובר לחשבון הגוגל שלך. נתוני הערוץ מתעדכנים כל יום, והגיבוי לדרייב רץ כל יום.'),
-    h('div', { class: 'row' },
-      twoStep('נתק חיבור', 'לנתק?', async () => { await api('DELETE', '/api/google'); await draw(); }),
-      externalLink('https://myaccount.google.com/permissions', 'ניהול ההרשאות בחשבון גוגל')),
+  const connected = (y) => [
+    h('p', null, '✅ הערוץ ', y.title ? `“${y.title}” ` : null, h('bdi', { dir: 'ltr' }, y.channel), ' מחובר. הנתונים מתעדכנים כל יום.'),
+    h('div', { class: 'row' }, twoStep('הסר ערוץ', 'להסיר?', async () => { await api('DELETE', '/api/youtube'); await draw(); })),
   ];
 
   const draw = async () => {
-    let g;
-    try { g = await api('GET', '/api/google'); } catch (error) {
-      box.replaceChildren(h('h2', null, '🔌 חיבור לחשבון גוגל'), h('p', { class: 'muted' }, error.message));
+    let y;
+    try { y = await api('GET', '/api/youtube'); } catch (error) {
+      box.replaceChildren(h('h2', null, '📈 נתוני הערוץ מיוטיוב'), h('p', { class: 'muted' }, error.message));
       return;
     }
-    const status = (ok) => h('span', { class: `badge ${ok ? 'ok' : 'warn'}` }, ok ? 'מחובר' : 'לא מחובר');
-    const backup = g.drive && h('button', { class: 'btn sm', onclick: (e) => act(e.currentTarget, () => api('POST', '/api/drive/backup'), '💾 גובה לדרייב') }, 'גבה עכשיו');
+    const status = h('span', { class: `badge ${y.connected ? 'ok' : 'warn'}` }, y.connected ? 'מחובר' : 'לא מחובר');
     box.replaceChildren(
-      h('h2', null, '🔌 חיבור לחשבון גוגל'),
-      h('div', { class: 'row' }, h('span', { class: 'grow' }, '📈 נתוני הערוץ מיוטיוב'), status(g.youtube)),
-      h('div', { class: 'row' }, h('span', { class: 'grow' }, '📁 גוגל דרייב (תיקייה לכל סרטון + גיבוי)'), backup, status(g.drive)),
-      ...(g.source === 'env' ? [h('p', { class: 'muted small' }, 'החיבור מוגדר דרך קובץ ‎.env.')] : g.connected ? connected() : setup(g)).filter(Boolean),
+      h('div', { class: 'row' }, h('h2', { class: 'grow' }, '📈 נתוני הערוץ מיוטיוב'), status),
+      ...(y.source === 'env' ? [h('p', { class: 'muted small' }, 'הערוץ מוגדר דרך קובץ ‎.env.')] : y.connected ? connected(y) : setup(y)),
     );
   };
 
@@ -649,8 +621,7 @@ function videoCard(v) {
     stepper,
     h('div', { class: 'row' },
       current && h('button', { class: 'btn primary sm', onclick: done }, `✅ ${current.name} בוצע`),
-      current && h('button', { class: 'btn sm', onclick: snooze }, '⏰ מחר'),
-      v.drive_url && externalLink(v.drive_url, '📁 תיקייה בדרייב')));
+      current && h('button', { class: 'btn sm', onclick: snooze }, '⏰ מחר')));
 }
 
 function ideaRow(idea) {

@@ -1,7 +1,7 @@
 """📈 YouTube stats (optional): daily snapshot of views/subscribers, milestones.
 
-Either YOUTUBE_API_KEY + YOUTUBE_CHANNEL (channel id "UC..." or "@handle"), or a Google sign-in that was
-granted the youtube.readonly scope (then the signed-in user's own channel is used).
+Needs YOUTUBE_API_KEY and YOUTUBE_CHANNEL (the channel's name "@handle", or its id "UC..."). There is no Google
+sign-in and no permission to grant: the numbers are the public ones, looked up by the channel's name.
 
 Events emitted:
   channel.milestone(metric, value) – e.g. ("subscribers", 1000)
@@ -10,8 +10,10 @@ Events emitted:
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from urllib.parse import unquote, urlsplit
 
 import httpx
 from telegram import Update
@@ -20,7 +22,6 @@ from telegram.ext import JobQueue
 from ..config import Settings
 from ..core import ui
 from ..core.module import Command, Ctx, DigestSection, MenuButton, Module
-from ..google_auth import YOUTUBE_SCOPE, GoogleToken
 from ..storage import Database
 
 log = logging.getLogger(__name__)
@@ -57,6 +58,37 @@ SCHEMA = [
 ]
 
 
+_CHANNEL_ID = re.compile(r"^UC[\w-]{22}$")
+_HANDLE = re.compile(r"^@[\w.\-]{3,30}$")
+_ADDRESS = re.compile(r"^(www\.|m\.)?youtu(be\.com|\.be)\b", re.IGNORECASE)
+
+
+def normalize_channel(text: object) -> str | None:
+    """What the user typed -> "@handle" or "UC..." (None if it is neither).
+
+    Accepts a plain name ("MyChannel"), a handle ("@MyChannel"), a channel id, or a channel's address
+    (youtube.com/@MyChannel, youtube.com/channel/UC...).
+    """
+    value = str(text or "").strip()
+    if not value:
+        return None
+    if "/" in value or _ADDRESS.match(value):
+        parts = urlsplit(value if "//" in value else f"//{value}")
+        if (parts.hostname or "").removeprefix("www.").removeprefix("m.") not in ("youtube.com", "youtu.be"):
+            return None
+        segments = [unquote(segment) for segment in parts.path.split("/") if segment]
+        if segments and segments[0] == "channel" and len(segments) > 1:
+            value = segments[1]
+        elif segments and segments[0].startswith("@"):
+            value = segments[0]
+        else:
+            return None
+    if _CHANNEL_ID.match(value):
+        return value
+    value = value if value.startswith("@") else f"@{value}"
+    return value if _HANDLE.match(value) else None
+
+
 @dataclass
 class ChannelStats:
     title: str
@@ -71,31 +103,23 @@ class YouTubeClient:
         api_key: str | None,
         channel: str | None,
         transport: httpx.AsyncBaseTransport | None = None,
-        token: GoogleToken | None = None,
     ) -> None:
         self.api_key = api_key
-        self.channel = (channel or "").strip()
+        self.channel = normalize_channel(channel) or (channel or "").strip()
         self.transport = transport
-        self.token = token  # signed-in mode: the user's own channel, no API key needed
 
     async def fetch(self) -> ChannelStats:
-        params = {"part": "statistics,snippet"}
-        headers = {}
-        if self.token is not None:
-            params["mine"] = "true"
-            headers["Authorization"] = f"Bearer {await self.token.get()}"
+        params = {"part": "statistics,snippet", "key": self.api_key or ""}
+        if self.channel.startswith("@"):
+            params["forHandle"] = self.channel
         else:
-            params["key"] = self.api_key or ""
-            if self.channel.startswith("@"):
-                params["forHandle"] = self.channel
-            else:
-                params["id"] = self.channel
+            params["id"] = self.channel
         async with httpx.AsyncClient(timeout=20, transport=self.transport) as client:
-            response = await client.get(API_URL, params=params, headers=headers)
+            response = await client.get(API_URL, params=params)
         response.raise_for_status()
         items = response.json().get("items") or []
         if not items:
-            raise LookupError(f"YouTube channel not found: {self.channel or 'mine'}")
+            raise LookupError(f"YouTube channel not found: {self.channel}")
         stats = items[0]["statistics"]
         subscribers = None if stats.get("hiddenSubscriberCount") else int(stats.get("subscriberCount", 0))
         return ChannelStats(
@@ -148,24 +172,13 @@ class YouTubeStatsModule(Module):
 
     @classmethod
     def is_enabled(cls, settings: Settings) -> bool:
-        if settings.youtube_api_key and settings.youtube_channel:
-            return True
-        signed_in = settings.google_client_id and settings.google_client_secret and settings.google_refresh_token
-        return bool(signed_in and YOUTUBE_SCOPE in settings.google_scopes)
+        return bool(settings.youtube_api_key and settings.youtube_channel)
 
     def setup(self) -> None:
         self.core.db.migrate(self.name, SCHEMA)
         self.service = StatsService(self.core.db)
         settings = self.core.settings
-        token = None
-        if not (settings.youtube_api_key and settings.youtube_channel):
-            token = GoogleToken(
-                settings.google_client_id,
-                settings.google_client_secret,
-                settings.google_refresh_token,
-                self.client_transport,
-            )
-        self.client = YouTubeClient(settings.youtube_api_key, settings.youtube_channel, self.client_transport, token)
+        self.client = YouTubeClient(settings.youtube_api_key, settings.youtube_channel, self.client_transport)
         self.channel_title: str | None = None
 
     def menu_buttons(self) -> list[MenuButton]:

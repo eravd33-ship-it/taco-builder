@@ -3,7 +3,6 @@
 The order matters: it is the order of the sections in the morning digest.
 """
 
-from .drive import DriveModule
 from .ideas import IdeasModule
 from .motivation import MotivationModule
 from .routines import RoutinesModule
@@ -16,5 +15,4 @@ ALL_MODULES = [
     VideosModule,
     RoutinesModule,
     IdeasModule,
-    DriveModule,
 ]

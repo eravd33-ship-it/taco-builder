@@ -39,14 +39,9 @@ class Settings:
     uploads_per_week: int = 1
     db_path: Path = Path("data/creator_bot.db")
     disabled_modules: frozenset[str] = frozenset()
-    # YouTube channel statistics (optional)
+    # YouTube channel statistics (optional): a public API key + the channel's name, no Google sign-in
     youtube_api_key: str | None = None
     youtube_channel: str | None = None  # channel id (UC...) or @handle
-    # Google Drive (optional)
-    google_client_id: str | None = None
-    google_client_secret: str | None = None
-    google_refresh_token: str | None = None
-    google_scopes: frozenset[str] = frozenset()  # granted scopes; empty = unknown (e.g. set through .env)
     # AI assistant (optional; the desktop app can also store the key itself)
     anthropic_api_key: str | None = None
 
@@ -73,8 +68,5 @@ class Settings:
             disabled_modules=frozenset(disabled),
             youtube_api_key=env("YOUTUBE_API_KEY") or None,
             youtube_channel=env("YOUTUBE_CHANNEL") or None,
-            google_client_id=env("GOOGLE_CLIENT_ID") or None,
-            google_client_secret=env("GOOGLE_CLIENT_SECRET") or None,
-            google_refresh_token=env("GOOGLE_REFRESH_TOKEN") or None,
             anthropic_api_key=env("ANTHROPIC_API_KEY") or None,
         )

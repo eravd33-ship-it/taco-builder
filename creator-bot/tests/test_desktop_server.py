@@ -145,11 +145,8 @@ def test_a_failing_startup_is_reported_instead_of_hanging():
         runtime.start()
 
 
-def test_the_google_redirect_page_needs_no_token_but_only_accepts_our_own_sign_in(server):
-    status, headers, body = fetch(server, "GET", "/oauth/callback?code=x&state=<script>alert(1)</script>")
-    assert status == 400 and headers["Content-Type"].startswith("text/html")
-    assert b"<script>" not in body and b"/app.css" in body  # nothing from the URL is echoed back
-    assert fetch(server, "POST", "/oauth/callback")[0] == 405
-    assert fetch(server, "GET", "/oauth/callback?state=x", headers={"Host": "evil.example"})[0] == 403
-    assert fetch(server, "GET", "/api/google")[0] == 401  # everything else still needs the token
-    assert json.loads(fetch(server, "GET", "/api/google", headers=AUTH)[2])["connected"] is False
+def test_there_is_no_google_sign_in_page_any_more(server):
+    assert fetch(server, "GET", "/oauth/callback?code=x&state=y")[0] == 404
+    assert fetch(server, "GET", "/api/google", headers=AUTH)[0] == 404
+    assert fetch(server, "GET", "/api/youtube")[0] == 401  # the channel settings still need the token
+    assert json.loads(fetch(server, "GET", "/api/youtube", headers=AUTH)[2])["connected"] is False

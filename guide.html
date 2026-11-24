@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>מדריך שימוש – Creator Desk</title>
-  <meta name="description" content="איך משתמשים ב-Creator Desk: המסכים, התזכורות, חיבור ליוטיוב ולדרייב, העוזר החכם והנתונים.">
+  <meta name="description" content="איך משתמשים ב-Creator Desk: המסכים, התזכורות, נתוני הערוץ מיוטיוב, העוזר החכם והנתונים.">
   <meta name="theme-color" content="#d92d20">
   <link rel="icon" href="assets/img/icon.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/img/icon.png">
@@ -27,7 +27,7 @@
 <div class="wrap">
   <div class="page-head">
     <h1>מדריך שימוש</h1>
-    <p>הכול על האפליקציה: המסכים, התזכורות, החיבור ליוטיוב ולדרייב, והעוזר החכם.</p>
+    <p>הכול על האפליקציה: המסכים, התזכורות, נתוני הערוץ, והעוזר החכם.</p>
   </div>
   <div class="doc">
     <nav class="toc" aria-label="תוכן העניינים">
@@ -35,7 +35,7 @@
       <a href="#start">התחלה מהירה</a>
       <a href="#screens">המסכים</a>
       <a href="#reminders">תזכורות</a>
-      <a href="#google">חיבור לגוגל</a>
+      <a href="#youtube">נתוני הערוץ</a>
       <a href="#assistant">העוזר</a>
       <a href="#data">נתונים ופרטיות</a>
       <a href="#telegram">בוט טלגרם</a>
@@ -70,18 +70,18 @@
       </ul>
       <div class="note"><p><b>חשוב:</b> התזכורות מגיעות רק כשהאפליקציה פתוחה. אפשר למזער אותה, או להפעיל בהגדרות <b>הפעלה אוטומטית עם המחשב</b>. הכפתור <b>שלח התראת בדיקה</b> מוודא שהחלון הקופץ עובד אצלך.</p></div>
 
-      <h2 id="google">חיבור ליוטיוב ולדרייב</h2>
-      <p>בהגדרות, בכרטיס <b>חיבור לחשבון גוגל</b>. אחרי החיבור מופיעים נתוני הערוץ במסך היום, ולכל סרטון חדש נפתחת תיקייה בדרייב (עם תיקיות משנה לחומרי גלם, עריכה ותמונה ממוזערת), וגם גיבוי יומי של הנתונים.</p>
-      <p>צריך פעם אחת (כ-5 דקות, חינם) להכין "מזהה לקוח" בחשבון הגוגל שלך:</p>
+      <h2 id="youtube">נתוני הערוץ מיוטיוב</h2>
+      <p>בהגדרות, בכרטיס <b>נתוני הערוץ מיוטיוב</b>. מזינים את <b>שם הערוץ</b> ומפתח <bdi>API</bdi> חינמי, והאפליקציה מחפשת את הערוץ לפי השם וקוראת את המספרים הציבוריים שלו: צפיות, מנויים וסרטונים. הם מופיעים במסך היום ובסיכום הבוקר. <b>אין התחברות לחשבון גוגל ואין הרשאות לאשר.</b></p>
+      <p>שם הערוץ הוא מה שאחרי ה-<bdi>@</bdi> בכתובת הערוץ, למשל <bdi>@MyChannel</bdi>. אפשר גם להדביק את כתובת הערוץ כולה.</p>
+      <p>את המפתח מכינים פעם אחת (כ-3 דקות, חינם):</p>
       <ol>
         <li>פותחים את <a href="https://console.cloud.google.com/projectcreate"><bdi>Google Cloud Console</bdi></a> ויוצרים פרויקט חדש (שם חופשי).</li>
-        <li>מפעילים (<bdi>Enable</bdi>) את שני ה-<bdi>API</bdi>: <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com"><bdi>YouTube Data API v3</bdi></a> ו-<a href="https://console.cloud.google.com/apis/library/drive.googleapis.com"><bdi>Google Drive API</bdi></a>.</li>
-        <li>פותחים את <a href="https://console.cloud.google.com/apis/credentials/consent"><bdi>OAuth consent screen</bdi></a>: בוחרים <bdi>External</bdi>, ממלאים שם לאפליקציה ואת המייל שלך, ומוסיפים את המייל שלך גם כ-<bdi>Test user</bdi>.</li>
-        <li>ב-<a href="https://console.cloud.google.com/apis/credentials"><bdi>Credentials</bdi></a> לוחצים <bdi>Create credentials</bdi> ← <bdi>OAuth client ID</bdi>, ובסוג האפליקציה בוחרים <b><bdi>Desktop app</bdi></b>.</li>
-        <li>מעתיקים את <bdi>Client ID</bdi> ואת <bdi>Client secret</bdi>, מדביקים באפליקציה ולוחצים <b>התחבר לגוגל</b>. נפתח הדפדפן, מאשרים, והאפליקציה מתעדכנת לבד.</li>
+        <li>מפעילים (<bdi>Enable</bdi>) את <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com"><bdi>YouTube Data API v3</bdi></a>.</li>
+        <li>ב-<a href="https://console.cloud.google.com/apis/credentials"><bdi>Credentials</bdi></a> לוחצים <bdi>Create credentials</bdi> ← <bdi>API key</bdi>, ומעתיקים את המפתח.</li>
+        <li>מדביקים באפליקציה את שם הערוץ ואת המפתח, ולוחצים <b>שמור ובדוק</b>. האפליקציה בודקת מול יוטיוב לפני שהיא שומרת.</li>
       </ol>
-      <div class="note"><p><b>טיפ:</b> במסך ההסכמה לוחצים <bdi>Publish app</bdi>, כדי שהחיבור לא יפוג אחרי 7 ימים. בכניסה תופיע אזהרה <bdi>Google hasn't verified this app</bdi>: לוחצים <bdi>Advanced</bdi> ואז <bdi>Go to …</bdi>. זו האפליקציה שלך, והיא מבקשת רק לקרוא את נתוני הערוץ ולנהל קבצים שהיא עצמה יצרה בדרייב.</p></div>
-      <p>אפשר לנתק בכל רגע מאותו כרטיס, ולהסיר את ההרשאה לגמרי ב-<a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</p>
+      <p>אפשר להסיר את הערוץ בכל רגע מאותו כרטיס.</p>
+      <div class="note"><p><b>התחברת בעבר לגוגל?</b> החיבור לחשבון גוגל (יוטיוב ודרייב) הוסר, והאפליקציה מוחקת לבד את פרטי ההתחברות שנשמרו. אפשר להסיר את ההרשאה גם בחשבון עצמו ב-<a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</p></div>
 
       <h2 id="assistant">העוזר (בינה מלאכותית)</h2>
       <p>מסך <b>עוזר</b> הוא צ'אט בעברית שמכיר את הערוץ שלך: הסרטונים בתהליך, מה שפורסם לאחרונה, הרעיונות השמורים, היעדים ונתוני הערוץ (אם חיברת יוטיוב). הוא עוזר לתכנן, מציע כותרות ועונה על שאלות. במסך הרעיונות יש גם <b>הצע רעיונות</b>.</p>
@@ -96,7 +96,7 @@
       <ul>
         <li>הנתונים נשמרים בקובץ אחד: <code>%APPDATA%\CreatorDesk</code> ב-<bdi>Windows</bdi>, <code>~/Library/Application Support/CreatorDesk</code> ב-<bdi>Mac</bdi>, <code>~/.local/share/CreatorDesk</code> ב-<bdi>Linux</bdi>. מעתיקים את הקובץ כדי לגבות או לעבור מחשב.</li>
         <li>האפליקציה מקשיבה רק לכתובת <code>127.0.0.1</code>, כלומר רק למחשב שלך. כל בקשה נושאת מפתח סודי שנוצר בכל הפעלה, וכתובות זרות נדחות.</li>
-        <li>פרטי החיבור לגוגל ומפתח ה-<bdi>API</bdi> נשמרים באותו קובץ נתונים, כמו קובץ <code>.env</code>.</li>
+        <li>שם הערוץ ומפתחות ה-<bdi>API</bdi> נשמרים באותו קובץ נתונים, כמו קובץ <code>.env</code>.</li>
       </ul>
 
       <h2 id="telegram">בוט טלגרם</h2>

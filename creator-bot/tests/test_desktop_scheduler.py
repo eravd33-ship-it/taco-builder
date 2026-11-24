@@ -3,13 +3,11 @@
 from datetime import timedelta
 
 import httpx
-import pytest
 
-from creator_bot.modules.drive import DriveModule
 from creator_bot.modules.youtube_stats import YouTubeStatsModule
 
 from .conftest import TODAY
-from .test_integrations import GOOGLE, FakeDrive, youtube_transport
+from .test_integrations import youtube_transport
 
 
 def at(clock, hour, minute=0, days=0):
@@ -113,38 +111,8 @@ async def test_youtube_refresh_runs_in_the_background_and_retries_after_failure(
     assert calls.count("broken") == 2
 
 
-async def test_drive_backup_once_a_day_and_via_button(make_desk, clock, monkeypatch):
-    fake = FakeDrive()
-    monkeypatch.setattr(DriveModule, "client_transport", httpx.MockTransport(fake))
-    desk = make_desk(**GOOGLE)
-
-    await desk.app.tick()
-    await desk.settle()
-    assert list(fake.files.values()) == ["creator-bot-backup-2.db"]
-    await desk.app.tick()
-    await desk.settle()
-    assert len(fake.patches) == 1  # not again the same day
-
-    result = await desk.ok("POST", "/api/drive/backup")
-    assert result["url"].startswith("https://drive.test/") and len(fake.patches) == 2
-
-    # a Drive folder is created for each new video and linked from the video card
-    video = (await desk.call("POST", "/api/videos", {"title": "טיול", "date": (TODAY).isoformat()}))[1]
-    await desk.settle()
-    card = (await desk.ok("GET", "/api/videos"))["active"][0]
-    assert card["id"] == video["id"] and card["drive_url"].startswith("https://drive.test/")
-    assert any("תיקייה" in text for text in texts(desk))
-
-
 async def test_stats_refresh_button_reports_failures(make_desk, monkeypatch):
     monkeypatch.setattr(YouTubeStatsModule, "client_transport", httpx.MockTransport(lambda r: httpx.Response(403)))
     desk = make_desk(youtube_api_key="K", youtube_channel="UC1")
     status, data = await desk.call("POST", "/api/stats/refresh")
     assert status == 502 and "מפתח" in data["error"]
-
-
-@pytest.mark.parametrize("path", ["/api/drive/backup"])
-async def test_drive_button_reports_failures(make_desk, monkeypatch, path):
-    monkeypatch.setattr(DriveModule, "client_transport", httpx.MockTransport(lambda r: httpx.Response(500)))
-    desk = make_desk(**GOOGLE)
-    assert (await desk.call("POST", path))[0] == 502

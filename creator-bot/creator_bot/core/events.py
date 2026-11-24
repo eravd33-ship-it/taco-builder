@@ -1,7 +1,7 @@
 """A tiny async event bus, so modules can react to each other without imports.
 
 Example: the videos module emits "video.published"; the motivation module
-listens and celebrates, and the Drive module could archive files. Handlers
+listens and celebrates. Handlers
 receive keyword arguments and should accept **_ for forward compatibility.
 """
 

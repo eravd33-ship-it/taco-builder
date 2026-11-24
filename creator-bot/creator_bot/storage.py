@@ -38,7 +38,7 @@ class Database:
     def query_one(self, sql: str, params: Sequence[Any] = ()) -> sqlite3.Row | None:
         return self.conn.execute(sql, params).fetchone()
 
-    # Key/value store for small settings (goals, owner id, Drive folder ids...).
+    # Key/value store for small settings (goals, owner id, the YouTube channel...).
     def get(self, key: str, default: Any = None) -> Any:
         row = self.query_one("SELECT value FROM kv WHERE key = ?", (key,))
         return json.loads(row["value"]) if row else default

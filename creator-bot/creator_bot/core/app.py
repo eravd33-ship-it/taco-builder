@@ -303,8 +303,6 @@ class Core:
         ]
         if "youtube_stats" in self.modules:
             lines.append("📈 לעקוב אחרי הצפיות והמנויים בערוץ")
-        if "drive" in self.modules:
-            lines.append("📁 לפתוח תיקייה בדרייב לכל סרטון ולגבות את הנתונים")
         morning = self.settings.morning_time.strftime("%H:%M")
         evening = self.settings.evening_time.strftime("%H:%M")
         lines += [

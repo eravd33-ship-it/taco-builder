@@ -1,6 +1,6 @@
 """Notifications: an in-app inbox plus native OS pop-ups.
 
-The shared modules (motivation, Drive...) call `core.notify(html_text)`. On the
+The shared modules (motivation, routines...) call `core.notify(html_text)`. On the
 desktop `core.bot` is a `DesktopBot`, which turns that text into an inbox entry
 and, when the window is not in front, an OS notification.
 """

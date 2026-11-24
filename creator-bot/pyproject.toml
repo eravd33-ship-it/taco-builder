@@ -1,7 +1,7 @@
 [project]
 name = "creator-bot"
 version = "0.1.0"
-description = "Telegram assistant for running a YouTube channel: reminders, motivation, ideas, Drive"
+description = "Telegram assistant for running a YouTube channel: reminders, motivation, ideas, YouTube stats"
 requires-python = ">=3.10"
 
 [tool.pytest.ini_options]
